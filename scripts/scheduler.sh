@@ -10,6 +10,7 @@ service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /va
 
 # Set env variables
 	
+	DOMAIN_DIR=$DOMAIN_DIR
 	CERT_DIR=$CERT_DIR
 	PROXY_SERVICE_FILE=$PROXY_SERVICE_FILE
 	PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
@@ -165,7 +166,7 @@ fi
 
 unset IFS
 
-inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,CLOSE,DELETE -r $CERT_DIR $PROXY_CONFIG_DIR | \
+inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,CLOSE,DELETE -r $DOMAIN_DIR $CERT_DIR $PROXY_CONFIG_DIR | \
 while read dir op file
 
 do 
@@ -182,6 +183,11 @@ do
       [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "DELETE" ]] ; then
 		echo "proxy config created, changed or deleted";
 		check_proxy_state;
+ 
+ elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] || \
+      [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
+		echo "domain config created, changed or deleted";
+		./nginx_config_create.sh;
  fi
 
 done
