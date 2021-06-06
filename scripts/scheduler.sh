@@ -46,15 +46,15 @@ done
 		#if [[ $UP -eq 1 ]] ; then
 		#	echo "FUT";
 		#fi
-		RUNNING_CONTANERS=$((RUNNING_CONTANERS + UP))
+		RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
 	done;
 
 # Running containers from existing roles
 #	echo $CONTAINERS_BY_ROLE;
-#	echo $RUNNING_CONTANERS;
+#	echo $RUNNING_CONTAINERS;
 # The roles numbers and the running containers numbers are equal or greater than 2
 
-if [[ "$RUNNING_CONTANERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTANERS" == 2 ]] ; then
+if [[ "$RUNNING_CONTAINERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTAINERS" == 2 ]] ; then
 	echo "Starting proxy restart process"
 fi
 		#if [[ $UP -eq 1 ]] ; then
