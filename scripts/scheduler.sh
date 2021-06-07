@@ -23,14 +23,16 @@ inotifywait --exclude .swp -m -e CREATE,CLOSE_WRITE,CLOSE,DELETE -r $CERT_DIR $P
 while read dir op file
 
 do 
- if [[ "${dir}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
-        	DOMAIN=$(echo $dir|cut -d / -f3)
-		echo "New cert created: '$DOMAIN'"
 
- elif [[ "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" || "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CREATE" || "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "DELETE" ]] ;
- 	then
+ if [[ "${dir}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE" ]]; then
+                DOMAIN=$(echo $dir|cut -d / -f3)
+                echo "New cert created: '$DOMAIN'"
+
+ elif [[ "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE" ]] || \      
+      [[ "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CREATE" ]] || \
+      [[ "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "DELETE" ]] ; then
 		echo "proxy config created, changed or deleted"
-   fi
+
 done
 
 # Check services with running containers by roles
