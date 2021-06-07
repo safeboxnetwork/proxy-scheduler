@@ -32,6 +32,7 @@ do
       [[ "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CREATE" ]] || \
       [[ "${dir}" == "${PROXY_CONFIG_DIR}" && "${op}" == "DELETE" ]] ; then
 		echo "proxy config created, changed or deleted"
+ fi
 
 done
 
