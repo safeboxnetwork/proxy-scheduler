@@ -2,35 +2,79 @@
 
 service_exec=echo
 
+# Initial parameters
+	DATE=`date +%F-%H-%M-%S`
+	TIMEOUT=2
+	RESTART=2
+	RESTART_COUNTER=0
+
 # Set env variables
 	
-	DATE=`date +%F-%H-%M-%S`
 	CERT_DIR=/keys
 	PROXY_SERVICE_FILE=/etc/user/config/services/public-proxy.json
 	PROXY_CONFIG_DIR=/proxy_config
 	ROLE="backend-proxy"
 	SERVICE_NAME="public-proxy"
-	CONTAINERS_BY_ROLE=0
-	RUNNING_CONTAINERS=0
-	TIMEOUT=5
-	RESTART=5
 
 
 check_proxy_state() {
+# Set restart counter to zero
+
+	CONTAINER_NAMES="";
+	CONTAINERS_BY_ROLE=0
+	RUNNING_CONTAINERS=0
+
 # Check services with running containers by roles
+for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' $PROXY_SERVICE_FILE | jq -r .NAME) ; do
 
-	for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' $PROXY_SERVICE_FILE | jq -r .NAME) ; do
+	CONTAINERS_BY_ROLE=$((CONTAINERS_BY_ROLE +1))
 
-		CONTAINERS_BY_ROLE=$((CONTAINERS_BY_ROLE +1))
+	UP=$(docker ps | grep $CONTAINER | grep Up | wc -l)
+	RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
 
-		UP=$(docker ps | grep $CONTAINER | grep Up | wc -l)
-		RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
-	done;
+	if [[ "$UP" != 0 ]]; then
+		CONTAINER_NAMES=$CONTAINER_NAMES" "$CONTAINER;
+	fi;
+done;
 
 # The roles numbers and the running containers numbers are equal or greater than 2
-if [[ "$RUNNING_CONTAINERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTAINERS" == 2 ]] ; then
-	echo "Starting proxy restart process"
-fi }
+if [[ "$RUNNING_CONTAINERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTAINERS" -ge 2 ]] ; then
+	echo "Starting proxy restart process";
+	echo $CONTAINER_NAMES;
+	do_proxy_restart ;
+	
+else
+	sleep $TIMEOUT;
+	RESTART_COUNTER=$((RESTART_COUNTER +1))
+		
+	if [[ "$RESTART_COUNTER" -le "$RESTART" ]] ; then
+		check_proxy_state;
+	else
+		recover_process;
+	fi
+
+#	for CONTAINER in `echo $CONTAINER_NAMES`; do 
+
+
+#	done;
+
+fi 
+
+
+}
+
+
+do_proxy_restart() { echo "Proxy restarts"
+}
+
+check_domain() { echo "Checking $DOMAIN name"
+}
+
+recover_process() { echo "Recovering previous state"
+}
+
+send_error_msg () { echo "Sending error messages"
+}
 
 # Triggers by certificate or proxy config changes
 
