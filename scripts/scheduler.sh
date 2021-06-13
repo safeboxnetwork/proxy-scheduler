@@ -4,17 +4,17 @@ service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /va
 
 # Initial parameters
 	DATE=`date +%F-%H-%M-%S`
-	TIMEOUT=2
-	RESTART=2
+	TIMEOUT=$TIMEOUT
+	RESTART=$RESTART
 	RESTART_COUNTER=0
 
 # Set env variables
 	
-	CERT_DIR=/keys
-	PROXY_SERVICE_FILE=/etc/user/config/services/public-proxy.json
-	PROXY_CONFIG_DIR=/proxy_config
-	ROLE="backend-proxy"
-	SERVICE_NAME="public-proxy"
+	CERT_DIR=$CERT_DIR
+	PROXY_SERVICE_FILE=$PROXY_SERVICE_FILE
+	PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
+	ROLE=$ROLE
+	SERVICE_NAME=$SERVICE_NAME
 
 do_proxy_restart() { 
 
