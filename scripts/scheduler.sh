@@ -111,14 +111,24 @@ elif [[ "$RUNNING_CONTAINERS" -eq 1 ]] ; then
 			else 
 				echo "$proxies starting was unsuccesful";
 			fi
-# At last need to restart the only one running proxy when the others started successful.
 		else
 			ONLY_RUNNING_PROXY_NAME=$proxies;
 			
 		fi
 
 	done	
-echo "Only running proxy name="$ONLY_RUNNING_PROXY_NAME;
+
+# At last need to restart the only one running proxy when the others started successful.
+for CHECK_PROXIES in $CONTAINERS ; do
+if [[ $CHECK_PROXIES != $ONLY_RUNNING_PROXY_NAME ]] ; then
+	if docker ps | grep $CHECK_PROXIES ; then
+		echo "Not running proxies successfuly started, let's start the only running one.";
+		#do_proxy_restart $ONLY_RUNNING_PROXY_NAME;
+	else
+		echo "Not enough running proxies found, can't start the only running one.";
+	fi
+fi
+done
 
 else
 	sleep $TIMEOUT;
