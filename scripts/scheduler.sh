@@ -17,24 +17,21 @@ service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /va
 	SERVICE_NAME="public-proxy"
 
 do_proxy_restart() { 
-for proxies in $CONTAINER_NAMES ; do 
-	docker stop $proxies;
-	sleep $TIMEOUT;
-	#$service_exec $SERVICE_NAME.containers.$proxies start
-	if docker ps | grep $proxies ; then
-		echo "$proxies restarted successful";
-	else 
-		RESTART_COUNTER=0
-		PROXY_NAME=$proxies
-		for retries in $(seq 0 $RESTART); do
-		RESTART_COUNTER=$((RESTART_COUNTER +1))
-		echo "Retried number is: "$retries;
-		echo "restart_value is: "$RESTART;
-		echo "restart counter is: "$RESTART_COUNTER;
-		echo "proxy name: "$PROXY_NAME;
-			if [[ $RESTART -le $retries ]] ; then
-				echo "Proxy "$PROXY_NAME" restarting in progress";
-				#$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
+
+        local NAMES="$1"
+
+	for proxies in $NAMES ; do 
+		docker stop $proxies;
+		sleep $TIMEOUT;
+		#$service_exec $SERVICE_NAME.containers.$proxies start
+		if docker ps | grep $proxies ; then
+			echo "$proxies restarted successful";
+		else 
+			PROXY_NAME=$proxies
+			for retries in $(seq 0 $((RESTART + 1))); do
+				if [[ $retries -le $RESTART ]] ; then
+					echo "Proxy "$PROXY_NAME" restarting in progress";
+					#$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
 					if docker ps | grep $PROXY_NAME ; then
 						echo "$PROXY_NAME restarted successful";
 					else	
@@ -43,12 +40,12 @@ for proxies in $CONTAINER_NAMES ; do
 						#sleep $TIMEOUT;
 					fi
 				else
-	               			echo "Reached retrying limit: "$RESTART" ,giving up, starting recocer previous state"
+					echo "Reached retrying limit: "$RESTART" ,giving up, starting recocer previous state"
 					recover_process;
-			fi
-		done
-	fi
-done 
+				fi
+			done
+		fi
+	done 
 }
 
 check_domain() { echo "Checking $DOMAIN name"
@@ -85,7 +82,7 @@ done;
 # The roles numbers and the running containers numbers are equal or greater than 2
 if [[ "$RUNNING_CONTAINERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTAINERS" -ge 2 ]] ; then
 	echo "Starting proxy restart process";
-	do_proxy_restart ;
+	do_proxy_restart "$CONTAINER_NAMES";
 
 # In case of no running proxies found, try to start the service
 elif [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then 
@@ -123,7 +120,7 @@ for CHECK_PROXIES in $CONTAINERS ; do
 if [[ $CHECK_PROXIES != $ONLY_RUNNING_PROXY_NAME ]] ; then
 	if docker ps | grep $CHECK_PROXIES ; then
 		echo "Not running proxies successfuly started, let's start the only running one.";
-		#do_proxy_restart $ONLY_RUNNING_PROXY_NAME;
+		do_proxy_restart $ONLY_RUNNING_PROXY_NAME;
 	else
 		echo "Not enough running proxies found, can't start the only running one.";
 	fi
