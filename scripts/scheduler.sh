@@ -23,22 +23,27 @@ do_proxy_restart() {
 	for proxies in $NAMES ; do 
 		docker stop $proxies;
 		sleep $TIMEOUT;
-		#$service_exec $SERVICE_NAME.containers.$proxies start
+		$service_exec $SERVICE_NAME.containers.$proxies start
 		if docker ps | grep $proxies ; then
-			echo "$proxies restarted successful";
+			if [ -z "$DOMAIN" ] ; then
+				echo "$proxies restarted successful";
+			else
+				check_domain;
+			fi
 		else 
 			PROXY_NAME=$proxies
 			for retries in $(seq 0 $((RESTART + 1))); do
 				if [[ $retries -le $RESTART ]] ; then
 					echo "Proxy "$PROXY_NAME" restarting in progress";
-					#$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
-					if docker ps | grep $PROXY_NAME ; then
-						echo "$PROXY_NAME restarted successful";
-					else	
-						echo "Restarting number is only: "$retries" so try again"
-						sleep 3;
-						#sleep $TIMEOUT;
-					fi
+					docker stop $proxies;
+					sleep $TIMEOUT;
+					$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
+						if docker ps | grep $PROXY_NAME ; then
+							echo "$PROXY_NAME restarted successful";
+						else	
+							echo "Restarting number is only: "$retries" so try again"
+							sleep $TIMEOUT;
+						fi
 				else
 					echo "Reached retrying limit: "$RESTART" ,giving up, starting recocer previous state"
 					recover_process;
@@ -48,7 +53,14 @@ do_proxy_restart() {
 	done 
 }
 
-check_domain() { echo "Checking $DOMAIN name"
+check_domain() { echo "Checking $DOMAIN name";
+CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN";
+if [[ "$(eval $CURL_CHECK)" == "200" ]] ; then 
+	echo "$proxies restarted successful";
+else 
+	send_error_msg;
+fi
+			
 }
 
 recover_process() { echo "Recovering previous state"
