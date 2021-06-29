@@ -100,8 +100,10 @@ if [[ "$RUNNING_CONTAINERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTAINERS" -g
 # In case of no running proxies found, try to start the service
 elif [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then 
 	echo "No running proxies found, starting all";
+	
+	$service_exec /services/$SERVICE_NAME.json start;
+	
 	for proxies in $CONTAINERS ; do 
-	$service_exec $SERVICE_NAME.containers.$proxies start;
 
 	if docker ps | grep $proxies ; then
 		echo "$proxies started successful";
@@ -166,6 +168,8 @@ fi
 
 unset IFS
 
+NEW_CERT=0;
+
 inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,CLOSE,DELETE -r $DOMAIN_DIR $CERT_DIR $PROXY_CONFIG_DIR | \
 while read dir op file
 
@@ -174,10 +178,18 @@ do
 
  parent="/"$(echo $dir|cut -d / -f2)
 
+ if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CREATE" ]]; then
+ 		NEW_CERT=1;
+ fi;
+
  if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE"  ]]; then
 		DOMAIN=$(echo $dir|cut -d / -f3);
                 echo "New cert created: '$DOMAIN'";
-		check_proxy_state;
+		if [[ "$NEW_CERT" -eq 0 ]] ; then
+			echo "newcert check proxy";
+			check_proxy_state;
+		fi
+		NEW_CERT=0;
 
  elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] || \
       [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "DELETE" ]] ; then
