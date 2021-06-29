@@ -109,3 +109,11 @@ echo "location / {
 }"
 
 } >> "$file"
+
+# check whether certificates exist or not
+
+if [ $HTTPS_PORT != "" ]; then
+	./check_certificates.sh;
+fi
+
+
