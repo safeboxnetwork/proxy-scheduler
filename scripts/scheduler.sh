@@ -196,10 +196,15 @@ do
 		echo "proxy config created, changed or deleted";
 		check_proxy_state;
  
- elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] || \
-      [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
-		echo "domain config created, changed or deleted";
-		./nginx_config_create.sh;
+ elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
+		DOMAIN=$(echo $file);
+		echo "domain config created, changed";
+		/scripts/nginx_config_create.sh "$DOMAIN";
+ 
+ elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
+		DOMAIN=$(echo $file);
+		echo "domain deleted";
+		/scripts/nginx_config_create.sh "$DOMAIN" "DEL";
  fi
 
 done
