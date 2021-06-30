@@ -2,10 +2,13 @@
 
 JQ="jq -r"
 
+cd /proxy_config
+
 DOMAIN=$1
 DEL=$2
 if [[ "$DEL" != "" ]]; then
 	echo "$DOMAIN DELETED";
+	rm $DOMAIN.conf;
 	exit;
 fi
 
@@ -21,10 +24,14 @@ REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
 REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
 ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 
+# check whether certificates exist or not
+
+if [ $HTTPS_PORT != "" ]; then
+	./check_certificates.sh "$DOMAIN";
+fi
+
 echo $DOMAIN;
 exit;
-
-cd /proxy_config
 
 file="$DOMAIN.conf"
 
@@ -79,7 +86,7 @@ listen $HTTPS_PORT ssl;
 server_name $DOMAIN_NAME;
 rewrite_log on
 proxy_ssl_server_name on; 
-ssl_dhparam /etc/ssl/keys/dhparams.pem;
+ssl_dhparam /etc/ssl/keys/dhparam.pem;
  ssl_certificate /etc/ssl/keys/fullchain.pem;
  ssl_certificate_key /etc/ssl/keys/key.pem;
  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -118,11 +125,4 @@ echo "location / {
 }"
 
 } >> "$file"
-
-# check whether certificates exist or not
-
-if [ $HTTPS_PORT != "" ]; then
-	./check_certificates.sh;
-fi
-
 
