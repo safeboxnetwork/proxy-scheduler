@@ -1,15 +1,12 @@
 #!/bin/sh
 
-JQ="jq -r"
-
 cd /proxy_config
 
 DOMAIN=$1
 DEL=$2
-if [[ "$DEL" != "" ]]; then
+if [[ $DEL != "" ]]; then
 	echo "$DOMAIN DELETED";
 	rm $DOMAIN.conf;
-	exit;
 fi
 
 DOMAIN_SOURCE=/domains/$DOMAIN
@@ -27,15 +24,14 @@ ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 # check whether certificates exist or not
 
 if [ $HTTPS_PORT != "" ]; then
-	./check_certificates.sh "$DOMAIN";
+	/scripts/check_certificates.sh "$DOMAIN";
 fi
 
 echo $DOMAIN;
-exit;
 
-file="$DOMAIN.conf"
+file="/tmp/$DOMAIN.conf"
 
-cp -a nginx_template.conf $DOMAIN.conf
+cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
 
 {
 
@@ -43,30 +39,36 @@ if [ $HTTP_PORT != "" ]; then
 	echo "server {
 listen $HTTP_PORT;
 server_name $DOMAIN_NAME;
-rewrite_log on"
-fi
+rewrite_log on;"
 
 echo
 
-if [[ $REDIRECT_HTTP != "" ]]; then
-	echo "return 301 http://$REDIRECT_HTTP;
+	if [[ $REDIRECT_HTTP != "" && $HTTP_PORT != "" ]]; then
+		echo "return 301 http://$REDIRECT_HTTP;
  }"
-elif [[ $REDIRECT_HTTPS != "" ]]; then
-	echo "return 301 https://$REDIRECT_HTTPS;
+	elif [[ $REDIRECT_HTTPS != "" && $HTTP_PORT != "" ]]; then
+		echo "return 301 https://$REDIRECT_HTTPS;
  }"
 	else
-		if [[ $ERROR_PAGE != "" ]]; then
-		echo "error_page 404 /$ERROR_PAGE;
+		if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
+			echo "error_page 404 /$ERROR_PAGE;
 location = /$ERROR_PAGE {
       root    html;
       allow   all;
-      index   404.html
-      rewrite ^ "'$scheme'"http://$ERROR_PAGE"'$request_uri'" permanent;
+      index   404.html;
+      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
               }"
 		fi
-	echo "location / {
- proxy_pass http://$LOCAL_IP:$HTTP_PORT;
- proxy_redirect off;
+	fi
+	echo "location / {"
+	
+	if [ $HTTP_PORT == "" ]; then
+ 		echo "proxy_pass http://$LOCAL_IP:80;"
+	else
+ 		echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+	fi
+
+ echo "proxy_redirect off;
  proxy_buffering off;
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
  proxy_set_header Upgrade "'$http_upgrade'";
@@ -84,11 +86,11 @@ if [ $HTTPS_PORT != "" ]; then
 	echo "server {
 listen $HTTPS_PORT ssl;
 server_name $DOMAIN_NAME;
-rewrite_log on
+rewrite_log on;
 proxy_ssl_server_name on; 
-ssl_dhparam /etc/ssl/keys/dhparam.pem;
- ssl_certificate /etc/ssl/keys/fullchain.pem;
- ssl_certificate_key /etc/ssl/keys/key.pem;
+ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;
+ ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
+ ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;
  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
  ssl_prefer_server_ciphers on;
  ssl_ciphers "'"EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4"'";
@@ -97,20 +99,18 @@ ssl_dhparam /etc/ssl/keys/dhparam.pem;
 ssl_session_cache shared:SSL:50m;
 ssl_session_timeout 5m;
 ssl_stapling on;"
-fi
 
 echo
 
-if [[ $ERROR_PAGE != "" ]]; then
-	echo "error_page 404 /$ERROR_PAGE;
+	if [[ $ERROR_PAGE != "" && $HTTPS_PORT != "" ]]; then
+		echo "error_page 404 /$ERROR_PAGE;
 location = /$ERROR_PAGE {
       root    html;
       allow   all;
-      index   404.html
-      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
+      index   404.html;
+      rewrite ^ "'$scheme'":http://$ERROR_PAGE"'$request_uri'" permanent;
               }"
-fi
-echo 
+	fi
 
 echo "location / {
  proxy_pass http://$LOCAL_IP:$HTTP_PORT;
@@ -123,6 +123,8 @@ echo "location / {
  access_log off;
  } 
 }"
+fi
 
 } >> "$file"
 
+mv /tmp/$DOMAIN.conf $DOMAIN.conf

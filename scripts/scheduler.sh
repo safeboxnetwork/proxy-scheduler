@@ -130,28 +130,30 @@ elif [[ "$RUNNING_CONTAINERS" -eq 1 ]] ; then
 
 	done	
 
-# At last need to restart the only one running proxy when the others started successful.
-for CHECK_PROXIES in $CONTAINERS ; do
-if [[ $CHECK_PROXIES != $ONLY_RUNNING_PROXY_NAME ]] ; then
-	if docker ps | grep $CHECK_PROXIES ; then
-		echo "Not running proxies successfuly started, let's start the only running one.";
-		do_proxy_restart $ONLY_RUNNING_PROXY_NAME;
-	else
-		echo "Not enough running proxies found, can't start the only running one.";
-	fi
-fi
-done
+	# At last need to restart the only one running proxy when the others started successful.
+	for CHECK_PROXIES in $CONTAINERS ; do
+		if [[ $CHECK_PROXIES != $ONLY_RUNNING_PROXY_NAME ]] ; then
+			if docker ps | grep $CHECK_PROXIES ; then
+				echo "Not running proxies successfuly started, let's start the only running one.";
+				do_proxy_restart $ONLY_RUNNING_PROXY_NAME;
+			else
+				echo "Not enough running proxies found, can't start the only running one.";
+			fi
+		fi
+	done
 
-else
-	sleep $TIMEOUT;
-	RESTART_COUNTER=$((RESTART_COUNTER +1))
-		
-	if [[ "$RESTART_COUNTER" -le "$RESTART" ]] ; then
-		check_proxy_state;
-	else
-		recover_process;
-	fi
 
+#				sleep $TIMEOUT;
+#				RESTART_COUNTER=$((RESTART_COUNTER +1))
+#
+#				echo "RUNNING CONTAINERS: "$RUNNING_CONTAINERS;
+#
+#				if [[ "$RESTART_COUNTER" -le "$RESTART" ]] ; then
+#					echo "ELSE: check proxy state";
+#					check_proxy_state;
+#				else
+#					recover_process;
+#				fi
 #	for CONTAINER in `echo $CONTAINER_NAMES`; do 
 
 
