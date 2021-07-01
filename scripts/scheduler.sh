@@ -170,8 +170,6 @@ fi
 
 unset IFS
 
-NEW_CERT=0;
-
 inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,CLOSE,DELETE -r $DOMAIN_DIR $CERT_DIR $PROXY_CONFIG_DIR | \
 while read dir op file
 
@@ -180,18 +178,10 @@ do
 
  parent="/"$(echo $dir|cut -d / -f2)
 
- if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CREATE" ]]; then
- 		NEW_CERT=1;
- fi;
-
- if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE"  ]]; then
+ if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CREATE,CLOSE_WRITE,CLOSE" && "$(file)" == "new_certificate" ]]; then
 		DOMAIN=$(echo $dir|cut -d / -f3);
                 echo "New cert created: '$DOMAIN'";
-		if [[ "$NEW_CERT" -eq 0 ]] ; then
-			echo "newcert check proxy";
-			check_proxy_state;
-		fi
-		NEW_CERT=0;
+		#check_proxy_state;
 
  elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] || \
       [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "DELETE" ]] ; then
@@ -210,10 +200,3 @@ do
  fi
 
 done
-
-
-# Running containers from existing roles
-#	echo $CONTAINERS_BY_ROLE;
-#	echo $RUNNING_CONTAINERS;
-		#$service_exec $SERVICE_NAME.containers.$CONTAINER stop
-		#$service_exec $SERVICE_NAME.containers.$CONTAINER start

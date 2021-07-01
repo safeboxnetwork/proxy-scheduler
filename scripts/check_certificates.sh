@@ -11,7 +11,6 @@ service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /va
 
 letsencrypt_certificates() {
 $service_exec /services/letsencrypt.json start
-
 }
 
 create_self_signed_certificate() { 
@@ -28,6 +27,11 @@ openssl req -x509 -newkey rsa:4096 -keyout $CERT_DIR/key.pem -out $CERT_DIR/full
 if [[ "$(ls -A $CERT_DIR)" == "" ]]; then
 	echo "$DOMAIN not contains certificates, creates new."
 	mkdir -p $CERT_DIR;
+else
+	file="$CERT_DIR/letsencrypt"
+	{
+	echo "{ \"DOMAIN\": \"$DOMAIN\" }"
+	} >> "$file"
 fi
 
 CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
