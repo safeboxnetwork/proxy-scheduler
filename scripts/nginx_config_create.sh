@@ -62,10 +62,10 @@ location = /$ERROR_PAGE {
 	fi
 	echo "location / {"
 	
-	if [ $HTTP_PORT == "" ]; then
- 		echo "proxy_pass http://$LOCAL_IP:80;"
-	else
+	if [[ $HTTP_PORT != "" ]]; then
  		echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+	else
+ 		echo "proxy_pass http://$LOCAL_IP:80;"
 	fi
 
  echo "proxy_redirect off;
@@ -79,10 +79,11 @@ location = /$ERROR_PAGE {
 fi
 
 if [[ $HTTPS_PORT == "" ]] ; then
-	echo "}"
+	echo "}
+}"
 fi
 
-if [ $HTTPS_PORT != "" ]; then
+if [[ $HTTPS_PORT != "" ]]; then
 	echo "server {
 listen $HTTPS_PORT ssl;
 server_name $DOMAIN_NAME;
@@ -113,10 +114,11 @@ location = /$ERROR_PAGE {
 	fi
 
 echo "location / {"
-	if [ $HTTP_PORT == "" ]; then
-		echo "proxy_pass http://$LOCAL_IP:80;"
-	else
+
+	if [[ $HTTP_PORT != "" ]]; then
 		echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+	else
+		echo "proxy_pass http://$LOCAL_IP:80;"
 	fi
  
 echo "proxy_redirect off;
@@ -127,6 +129,7 @@ echo "proxy_redirect off;
  proxy_cookie_path / /;
  access_log off;
  } 
+} 
 }"
 fi
 
