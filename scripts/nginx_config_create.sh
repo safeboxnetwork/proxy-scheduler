@@ -112,9 +112,14 @@ location = /$ERROR_PAGE {
               }"
 	fi
 
-echo "location / {
- proxy_pass http://$LOCAL_IP:$HTTP_PORT;
- proxy_redirect off;
+echo "location / {"
+	if [ $HTTP_PORT == "" ]; then
+		echo "proxy_pass http://$LOCAL_IP:80;"
+	else
+		echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+	fi
+ 
+echo "proxy_redirect off;
  proxy_buffering off;
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
  proxy_set_header Upgrade "'$http_upgrade'";
