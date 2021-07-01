@@ -178,7 +178,7 @@ do
 
  parent="/"$(echo $dir|cut -d / -f2)
 
- if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CREATE,CLOSE_WRITE,CLOSE" && "$(file)" == "new_certificate" ]]; then
+ if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CREATE,CLOSE_WRITE,CLOSE" && "${file}" == "new_certificate" ]]; then
 		DOMAIN=$(echo $dir|cut -d / -f3);
                 echo "New cert created: '$DOMAIN'";
 		#check_proxy_state;
