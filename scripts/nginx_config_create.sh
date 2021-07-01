@@ -7,6 +7,7 @@ DEL=$2
 if [[ $DEL != "" ]]; then
 	echo "$DOMAIN DELETED";
 	rm $DOMAIN.conf;
+	exit 0;
 fi
 
 DOMAIN_SOURCE=/domains/$DOMAIN
@@ -31,7 +32,7 @@ echo $DOMAIN;
 
 file="/tmp/$DOMAIN.conf"
 
-cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
+#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
 
 {
 
@@ -44,11 +45,11 @@ rewrite_log on;"
 echo
 
 	if [[ $REDIRECT_HTTP != "" && $HTTP_PORT != "" ]]; then
-		echo "return 301 http://$REDIRECT_HTTP;
- }"
+		echo "return 301 http://$REDIRECT_HTTP;"
+
 	elif [[ $REDIRECT_HTTPS != "" && $HTTP_PORT != "" ]]; then
-		echo "return 301 https://$REDIRECT_HTTPS;
- }"
+		echo "return 301 https://$REDIRECT_HTTPS;"
+
 	else
 		if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
 			echo "error_page 404 /$ERROR_PAGE;
@@ -75,11 +76,7 @@ location = /$ERROR_PAGE {
  proxy_set_header Connection "'$http_connection'";
  proxy_cookie_path / /;
  access_log off;
- }"
-fi
-
-if [[ $HTTPS_PORT == "" ]] ; then
-	echo "}
+ }
 }"
 fi
 
@@ -128,8 +125,7 @@ echo "proxy_redirect off;
  proxy_set_header Connection "'$http_connection'";
  proxy_cookie_path / /;
  access_log off;
- } 
-} 
+}
 }"
 fi
 

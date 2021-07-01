@@ -24,20 +24,19 @@ openssl req -x509 -newkey rsa:4096 -keyout $CERT_DIR/key.pem -out $CERT_DIR/full
 }
 
 
-if [[ "$(ls -A $CERT_DIR)" == "" ]]; then
+if [[ "$(ls $CERT_DIR)" == "" ]]; then
 	echo "$DOMAIN not contains certificates, creates new."
 	mkdir -p $CERT_DIR;
+	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
+
+	if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
+		create_self_signed_certificate;
+	fi
 else
 	file="$CERT_DIR/letsencrypt"
 	{
 	echo "{ \"DOMAIN\": \"$DOMAIN\" }"
 	} >> "$file"
-fi
-
-CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
-
-if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
-	create_self_signed_certificate;
-else 
 	letsencrypt_certificates;
 fi
+
