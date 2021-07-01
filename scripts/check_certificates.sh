@@ -2,11 +2,17 @@
 
 # Set env variables
 	
+	LETSENCRYPT_URL=$LETSENCRYPT_URL
 	DOMAIN_DIR=$DOMAIN_DIR
 	DOMAIN=$1
 	CERT_DIR=$CERT_DIR/$DOMAIN
 
+service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker:ro registry.format.hu/setup /scripts/service-exec"
 
+letsencrypt_certificates() {
+$service_exec /services/letsencrypt.json start
+
+}
 
 create_self_signed_certificate() { 
 
@@ -22,5 +28,12 @@ openssl req -x509 -newkey rsa:4096 -keyout $CERT_DIR/key.pem -out $CERT_DIR/full
 if [[ "$(ls -A $CERT_DIR)" == "" ]]; then
 	echo "$DOMAIN not contains certificates, creates new."
 	mkdir -p $CERT_DIR;
+fi
+
+CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
+
+if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
 	create_self_signed_certificate;
+else 
+	letsencrypt_certificates;
 fi
