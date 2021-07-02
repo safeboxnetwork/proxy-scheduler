@@ -3,11 +3,10 @@
 cd /proxy_config
 
 DOMAIN=$1
-DEL=$2
-if [[ $DEL != "" ]]; then
+if [ -n "$2" ]; then
 	echo "$DOMAIN DELETED";
 	rm $DOMAIN.conf;
-	exit 0;
+	exit;
 fi
 
 DOMAIN_SOURCE=/domains/$DOMAIN
@@ -24,11 +23,12 @@ ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 
 # check whether certificates exist or not
 
-if [ $HTTPS_PORT != "" ]; then
+if [[ $HTTPS_PORT != "" ]]; then
 	/scripts/check_certificates.sh "$DOMAIN";
 fi
 
-echo $DOMAIN;
+echo "3";
+echo "created domain name: "$DOMAIN;
 
 file="/tmp/$DOMAIN.conf"
 
@@ -36,7 +36,7 @@ file="/tmp/$DOMAIN.conf"
 
 {
 
-if [ $HTTP_PORT != "" ]; then
+if [[ $HTTP_PORT != "" ]]; then
 	echo "server {
 listen $HTTP_PORT;
 server_name $DOMAIN_NAME;
