@@ -27,7 +27,6 @@ if [[ $HTTPS_PORT != "" ]]; then
 	/scripts/check_certificates.sh "$DOMAIN";
 fi
 
-echo "3";
 echo "created domain name: "$DOMAIN;
 
 file="/tmp/$DOMAIN.conf"
