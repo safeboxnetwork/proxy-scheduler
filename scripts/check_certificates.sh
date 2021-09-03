@@ -15,10 +15,12 @@ service_exec="docker run --rm \
 
 letsencrypt_certificates() {
 
-	echo "XYZ: "$PROXY_SERVICE_FILE" "$ROLE
+	local RUNNING_CONTAINERS;
+
+	cd /
 
 	# Check services with running containers by roles
-	for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' $PROXY_SERVICE_FILE | jq -r .NAME) ; do
+	for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' /$PROXY_SERVICE_FILE | jq -r .NAME) ; do
 		UP=$(docker ps | grep $CONTAINER | grep Up | wc -l)
 		RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
 	done;
