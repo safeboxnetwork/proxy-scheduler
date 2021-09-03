@@ -18,12 +18,11 @@ while read dir op file
 
 do 
 
-
  parent="/"$(echo $dir|cut -d / -f2)
 
  if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] ; then
 		DOMAIN=$(echo $dir|cut -d / -f3);
-		if [ -f "$CERT_DIR/new_certificate"  ]; then
+		if [ -f "$CERT_DIR/$DOMAIN/new_certificate"  ]; then
 			echo "New cert created: '$DOMAIN'";
 			echo "newcert check proxy";
 			/scripts/check_proxy_state.sh;
