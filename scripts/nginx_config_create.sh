@@ -130,4 +130,5 @@ fi
 
 } >> "$file"
 
-mv /tmp/$DOMAIN.conf $DOMAIN.conf
+mv /tmp/$DOMAIN.conf $DOMAIN.conf;
+echo "$DOMAIN" >> new_config

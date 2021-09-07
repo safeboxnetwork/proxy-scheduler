@@ -35,6 +35,7 @@ do_proxy_restart() {
 					$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
 						if docker ps | grep $PROXY_NAME ; then
 							echo "$PROXY_NAME restarted successful";
+							break ;
 						else	
 							echo "Restarting number is only: "$retries" so try again"
 							sleep $TIMEOUT;
@@ -46,6 +47,8 @@ do_proxy_restart() {
 			done
 		fi
 	done 
+cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/configs
+rm $PROXY_CONFIG_DIR/new_config
 }
 
 check_domain() {
