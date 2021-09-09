@@ -9,7 +9,7 @@ DOMAIN_DIR=$DOMAIN_DIR
 CERT_DIR=$CERT_DIR
 PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
-# Triggers by certificate or proxy config changes
+# Triggers by certificate or domain config changes
 
 unset IFS
 
@@ -24,6 +24,12 @@ do
 		DOMAIN=$(echo $dir|cut -d / -f3);
 		if [[ -f $CERT_DIR/$DOMAIN/renew_certificate && ! -f $PROXY_CONFIG_DIR/new_config ]]; then
 			rm $CERT_DIR/$DOMAIN/renew_certificate;
+			echo "New cert created: '$DOMAIN'";
+			echo "newcert check proxy";
+			/scripts/check_proxy_state.sh $DOMAIN;
+		
+		elif [[ -f $CERT_DIR/$DOMAIN/new_certificate && ! -f $PROXY_CONFIG_DIR/new_config ]]; then
+			rm $CERT_DIR/$DOMAIN/new_certificate;
 			echo "New cert created: '$DOMAIN'";
 			echo "newcert check proxy";
 			/scripts/check_proxy_state.sh $DOMAIN;
