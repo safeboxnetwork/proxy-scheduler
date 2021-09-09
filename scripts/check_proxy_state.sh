@@ -111,6 +111,8 @@ elif [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then
 			echo "$proxies started successful";
 		else 
 			echo "$proxies starting was unsuccesful"
+			# In case of unsuccessfuly restarted proxy needed to start the proxy containers restarting process.
+			do_proxy_restart "$CONTAINER_NAMES";
 		fi
 	done
 
