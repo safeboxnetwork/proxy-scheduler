@@ -8,6 +8,7 @@ RESTART_COUNTER=0
 PROXY_SERVICE_FILE=$PROXY_SERVICE_FILE
 ROLE=$ROLE
 SERVICE_NAME=$SERVICE_NAME
+PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
 service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker:ro registry.format.hu/setup /scripts/service-exec"
 
@@ -46,9 +47,10 @@ do_proxy_restart() {
 				fi
 			done
 		fi
-	done 
-cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/configs
-rm $PROXY_CONFIG_DIR/new_config
+	done
+
+	cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/configs
+	rm $PROXY_CONFIG_DIR/new_config
 }
 
 check_domain() {
