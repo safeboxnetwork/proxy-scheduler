@@ -48,9 +48,11 @@ do_proxy_restart() {
 			done
 		fi
 	done
-
-	cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/configs
-	rm $PROXY_CONFIG_DIR/new_config
+	# in case of new proxy configuration generated needed to copy the domain name  to the configs file.then remove new_config flag.
+	if [[ -f $PROXY_CONFIG_DIR/new_config ]] ; then 
+		cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/config;
+		rm $PROXY_CONFIG_DIR/new_config;
+	fi
 }
 
 check_domain() {
