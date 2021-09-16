@@ -83,7 +83,7 @@ listen $HTTPS_PORT ssl;
 server_name $DOMAIN_NAME;
 rewrite_log on;"
 
-	if [[ $REDIRECT_HTTPS != "" && $HTTP_PORT != "" ]]; then
+	if [[ $REDIRECT_HTTPS != ""  ]]; then
 		echo "return 301 $REDIRECT_HTTPS;"
 	else
 
@@ -126,8 +126,11 @@ location = /$ERROR_PAGE {
  proxy_set_header Connection "'$http_connection'";
  proxy_cookie_path / /;
  access_log off;
-}
 }"
+	fi
+
+echo "}"
+
 fi
 
 } >> "$file"
