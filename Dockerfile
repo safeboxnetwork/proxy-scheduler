@@ -1,4 +1,4 @@
-FROM scheduler:latest
+FROM proxy-scheduler:latest
 
 COPY scripts /scripts
 

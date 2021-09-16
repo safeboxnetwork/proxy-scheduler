@@ -44,10 +44,10 @@ rewrite_log on;"
 echo
 
 	if [[ $REDIRECT_HTTP != "" && $HTTP_PORT != "" ]]; then
-		echo "return 301 http://$REDIRECT_HTTP;"
+		echo "return 301 $REDIRECT_HTTP;"
 
 	elif [[ $REDIRECT_HTTPS != "" && $HTTP_PORT != "" ]]; then
-		echo "return 301 https://$REDIRECT_HTTPS;"
+		echo "return 301 $REDIRECT_HTTPS;"
 
 	else
 		if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
