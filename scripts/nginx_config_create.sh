@@ -50,33 +50,32 @@ echo
 		echo "return 301 $REDIRECT_HTTPS;"
 
 	else
-		if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
-			echo "error_page 404 /$ERROR_PAGE;
+		echo "location / {"
+	
+		if [[ $HTTP_PORT != "" ]]; then
+ 			echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+		else
+ 			echo "proxy_pass http://$LOCAL_IP:80;"
+		fi
+
+		 echo "proxy_redirect off;
+		 proxy_buffering off;
+		 proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
+		 proxy_set_header Upgrade "'$http_upgrade'";
+		 proxy_set_header Connection "'$http_connection'";
+		 proxy_cookie_path / /;
+		 access_log off;
+		 }"
+			if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
+				echo "error_page 404 /$ERROR_PAGE;
 location = /$ERROR_PAGE {
       root    html;
       allow   all;
       index   404.html;
       rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
               }"
-		fi
-	fi
-	echo "location / {"
-	
-	if [[ $HTTP_PORT != "" ]]; then
- 		echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
-	else
- 		echo "proxy_pass http://$LOCAL_IP:80;"
-	fi
-
- echo "proxy_redirect off;
- proxy_buffering off;
- proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
- proxy_set_header Upgrade "'$http_upgrade'";
- proxy_set_header Connection "'$http_connection'";
- proxy_cookie_path / /;
- access_log off;
- }
-}"
+			fi
+echo "}"
 fi
 
 if [[ $HTTPS_PORT != "" ]]; then
