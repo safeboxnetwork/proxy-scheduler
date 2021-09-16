@@ -41,7 +41,6 @@ listen $HTTP_PORT;
 server_name $DOMAIN_NAME;
 rewrite_log on;"
 
-echo
 
 	if [[ $REDIRECT_HTTP != "" && $HTTP_PORT != "" ]]; then
 		echo "return 301 $REDIRECT_HTTP;"
@@ -64,17 +63,19 @@ echo
 		 proxy_set_header Upgrade "'$http_upgrade'";
 		 proxy_set_header Connection "'$http_connection'";
 		 proxy_cookie_path / /;
-		 access_log off;
-		 }"
+		 access_log off;"
+			
 			if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
 				echo "error_page 404 /$ERROR_PAGE;
-location = /$ERROR_PAGE {
-      root    html;
-      allow   all;
-      index   404.html;
-      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
-              }"
+				location = /$ERROR_PAGE {
+				      root    html;
+				      allow   all;
+				      index   404.html;
+				      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
+					      }"
 			fi
+		echo "}"
+	fi
 echo "}"
 fi
 
