@@ -148,6 +148,13 @@ elif [[ "$RUNNING_CONTAINERS" -eq 1 ]] ; then
 			fi
 		fi
 	done
+fi 
+
+} # end of check_proxy_state
+
+
+# call method
+check_proxy_state
 
 
 #				sleep $TIMEOUT;
@@ -165,13 +172,3 @@ elif [[ "$RUNNING_CONTAINERS" -eq 1 ]] ; then
 
 
 #	done;
-
-fi 
-
-} # end of check_proxy_state
-
-
-# call method
-check_proxy_state
-
-

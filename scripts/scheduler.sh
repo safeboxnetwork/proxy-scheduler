@@ -5,6 +5,7 @@
 DATE=`date +%F-%H-%M-%S`
 
 # Set env variables
+PROXY_TYPE=$PROXY_TYPE
 DOMAIN_DIR=$DOMAIN_DIR
 CERT_DIR=$CERT_DIR
 PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
@@ -37,6 +38,12 @@ do
  
  elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
 		DOMAIN=$(echo $file);
+		
+		if [[ "${PROXY_TYPE}" == "haproxy" ]]; then
+			echo "haproxy config created, changed";
+			/scripts/config_haproxy_generate.sh;
+		fi
+		
 		echo "domain config created, changed";
 		/scripts/nginx_config_create.sh "$DOMAIN";
 		
