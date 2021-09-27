@@ -22,7 +22,7 @@ echo "frontend http
 cat "$global_http"
 echo 
 
-echo "acl letsencrypt path_beg /.well-known/acme-challenge/";
+#echo "acl letsencrypt path_beg /.well-known/acme-challenge/";
 
 echo 
 
@@ -35,7 +35,7 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 done
 echo
 
-for i in `ls ${DOMAINS}*` ;  do
+for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
@@ -55,9 +55,9 @@ done
 
 echo 
 
-echo "use_backend letsencrypt_http if letsencrypt"
+#echo "use_backend letsencrypt_http if letsencrypt"
 
-for i in `ls ${DOMAINS}*` ;  do
+for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
         
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORTS $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
@@ -67,7 +67,7 @@ done
 
 echo
 
-for i in `ls ${DOMAINS}*` ;  do
+for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
       	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]
       	then
@@ -85,7 +85,7 @@ echo "frontend https
 cat "$global_https"
 echo 
 
-for i in `ls ${DOMAINS}*` ;  do
+for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
@@ -103,7 +103,7 @@ done
 
 echo 
 
-for i in `ls ${DOMAINS}*` ;  do
+for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
@@ -113,7 +113,7 @@ done
 
 echo 
 
-for i in `ls ${DOMAINS}*` ;  do
+for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
       	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
       	then
