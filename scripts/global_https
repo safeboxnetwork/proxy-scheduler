@@ -1,0 +1,7 @@
+bind :443
+  mode tcp
+  option tcplog
+  option dontlognull
+  tcp-request inspect-delay 5s 
+  tcp-request content accept if { req_ssl_hello_type 1 }
+  http-request add-header X-Forwarded-Proto https if { ssl_fc }

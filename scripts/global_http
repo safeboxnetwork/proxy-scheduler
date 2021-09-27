@@ -1,0 +1,6 @@
+bind :80
+  mode http
+  option forwardfor  
+  option httplog
+  option dontlognull
+  http-request add-header X-Forwarded-For %[src]
