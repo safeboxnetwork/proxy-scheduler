@@ -39,25 +39,31 @@ do
  elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
 		DOMAIN=$(echo $file);
 		
-		if [[ "${PROXY_TYPE}" == "haproxy" ]]; then
-			echo "haproxy config created, changed";
-			/scripts/config_haproxy_create.sh;
-		fi
-		
-		echo "domain config created, changed";
-		/scripts/nginx_config_create.sh "$DOMAIN";
-		
-		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then
-			/scripts/check_proxy_state.sh "$DOMAIN";
- 		fi
+	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
+		echo "haproxy config created, changed";                                           
+		/scripts/config_haproxy_create.sh;                                                
+	else                                                                                      
+		echo "domain config created, changed";                                            
+		/scripts/nginx_config_create.sh "$DOMAIN";                                        
+												  
+		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
+			/scripts/check_proxy_state.sh "$DOMAIN";                                  
+		fi                                                                                
+	fi
 
  elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
 		DOMAIN=$(echo $file);
 		echo "domain deleted";
+		
+	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
+		echo "haproxy config deleted";                                           
+		/scripts/config_haproxy_create.sh;                                                
+	else                                                                                      
 		if [ ! -f "$DOMAIN_DIR/$DOMAIN" ]; then
 			/scripts/nginx_config_create.sh "$DOMAIN" "DEL";
 			/scripts/check_proxy_state.sh "$DOMAIN" "DEL";
  		fi
+	fi
 
  fi
 
