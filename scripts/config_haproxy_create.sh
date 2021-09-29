@@ -9,10 +9,11 @@ PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
 cd /scripts
 file="$PROXY_DIR/haproxy.cfg"
-global_http="global_http"
-global_https="global_https"
 
-cp -a haproxy_template.cfg $PROXY_DIR/haproxy.cfg
+global_http="/scripts/global_http"
+global_https="/scripts/global_https"
+
+cp -a /scripts/haproxy_template.cfg $PROXY_DIR/haproxy.cfg
 
 {
 
@@ -124,4 +125,5 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 	fi
 done
 
-} >> "$file"
+} >> "$file";
+echo "$DOMAIN" >> $PROXY_DIR/new_config
