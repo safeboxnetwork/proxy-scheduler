@@ -2,6 +2,7 @@
 
 # Initial parameters
 DATE=`date +%F-%H-%M-%S`
+
 DOMAIN=$1
 
 # Set env variables

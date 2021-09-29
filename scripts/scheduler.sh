@@ -41,7 +41,7 @@ do
 		
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config created, changed";                                           
-		/scripts/config_haproxy_create.sh;                                                
+		/scripts/config_haproxy_create.sh $DOMAIN;                                                
 		
 		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
 			/scripts/check_proxy_state.sh "$DOMAIN";                                  
