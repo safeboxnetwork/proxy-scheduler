@@ -47,10 +47,10 @@ do_proxy_restart() {
 			done
 		fi
 	done
-	check_domain;
+	
 	# in case of new proxy configuration generated needed to copy the domain name  to the configs file.then remove new_config flag.
 	if [[ -f $PROXY_CONFIG_DIR/new_config ]] ; then 
-		if [[ ! -f $PROXY_CONFIG_DIR/config || "$(grep $DOMAIN $PROXY_CONFIG_DIR/config)" == "" ]] ; then 
+		if [[ ! -f $PROXY_CONFIG_DIR/config || "$(grep $DOMAIN $PROXY_CONFIG_DIR/config 2>/dev/null)" == "" ]] ; then 
 			cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/config;
 		fi
 		
@@ -159,6 +159,8 @@ fi
 # call method
 check_proxy_state
 
+# At last check the previously settings of domain.
+check_domain
 
 #				sleep $TIMEOUT;
 #				RESTART_COUNTER=$((RESTART_COUNTER +1))
