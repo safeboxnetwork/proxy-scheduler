@@ -24,8 +24,6 @@ do_proxy_restart() {
 		if docker ps | grep $proxies ; then
 			if [ -z "$DOMAIN" ] ; then
 				echo "$proxies restarted successful";
-			else
-				check_domain;
 			fi
 		else 
 			PROXY_NAME=$proxies
@@ -49,9 +47,10 @@ do_proxy_restart() {
 			done
 		fi
 	done
+	check_domain;
 	# in case of new proxy configuration generated needed to copy the domain name  to the configs file.then remove new_config flag.
 	if [[ -f $PROXY_CONFIG_DIR/new_config ]] ; then 
-		if [[ "$(grep $DOMAIN $PROXY_CONFIG_DIR/config)" == "" || ! -f $PROXY_CONFIG_DIR/config ]] ; then 
+		if [[ ! -f $PROXY_CONFIG_DIR/config || "$(grep $DOMAIN $PROXY_CONFIG_DIR/config)" == "" ]] ; then 
 			cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/config;
 		fi
 		
@@ -63,9 +62,9 @@ check_domain() {
 	echo "Checking $DOMAIN name";
 	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN";
 	if [[ "$(eval $CURL_CHECK)" == "200" ]] ; then 
-		echo "$proxies restarted successful";
+		echo "$DOMAIN accessed successful";
 	else 
-		send_error_msg;
+		send_error_msg $DOMAIN;
 	fi
 }
 
