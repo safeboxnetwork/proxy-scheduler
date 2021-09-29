@@ -7,7 +7,7 @@ DATE=`date +%F-%H-%M-%S`
 DOMAIN_DIR=$DOMAIN_DIR
 PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
-cd /scripts
+cd $DOMAIN_DIR
 file="$PROXY_DIR/haproxy.cfg"
 
 global_http="/scripts/global_http"
