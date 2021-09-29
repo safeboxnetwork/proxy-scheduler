@@ -42,6 +42,10 @@ do
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config created, changed";                                           
 		/scripts/config_haproxy_create.sh;                                                
+		
+		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
+			/scripts/check_proxy_state.sh "$DOMAIN";                                  
+		fi                                                                                
 	else                                                                                      
 		echo "domain config created, changed";                                            
 		/scripts/nginx_config_create.sh "$DOMAIN";                                        
@@ -58,6 +62,10 @@ do
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config deleted";                                           
 		/scripts/config_haproxy_create.sh;                                                
+		
+		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
+			/scripts/check_proxy_state.sh;                                  
+		fi                                                                                
 	else                                                                                      
 		if [ ! -f "$DOMAIN_DIR/$DOMAIN" ]; then
 			/scripts/nginx_config_create.sh "$DOMAIN" "DEL";
