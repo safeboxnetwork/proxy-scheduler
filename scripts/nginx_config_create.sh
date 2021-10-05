@@ -81,43 +81,39 @@ if [[ $HTTPS_PORT != "" ]]; then
 	echo "server {
 listen $HTTPS_PORT ssl;
 server_name $DOMAIN_NAME;
-rewrite_log on;"
+rewrite_log on;
+proxy_ssl_server_name on; 
+ ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;
+ ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
+ ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;
+ ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ ssl_prefer_server_ciphers on;
+ ssl_ciphers "'"EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4"'";
+ssl_session_cache shared:SSL:50m;
+ssl_session_timeout 5m;
+ssl_stapling on;"
+
+
+	if [[ $ERROR_PAGE != "" && $HTTPS_PORT != "" ]]; then
+		echo "error_page 404 /$ERROR_PAGE;
+location = /$ERROR_PAGE {
+      root    html;
+      allow   all;
+      index   404.html;
+      rewrite ^ "'$scheme'":http://$ERROR_PAGE"'$request_uri'" permanent;
+	      }"
+	fi
 
 	if [[ $REDIRECT_HTTPS != ""  ]]; then
 		echo "return 301 $REDIRECT_HTTPS;"
-	else
-
-		echo "proxy_ssl_server_name on; 
-		 ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;
-		 ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
-		 ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;
-		 ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-		 ssl_prefer_server_ciphers on;
-		 ssl_ciphers "'"EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4"'";
-
-		 # Hardening as-per https://gist.github.com/plentz/6737338
-		ssl_session_cache shared:SSL:50m;
-		ssl_session_timeout 5m;
-		ssl_stapling on;"
-
-
-		if [[ $ERROR_PAGE != "" && $HTTPS_PORT != "" ]]; then
-			echo "error_page 404 /$ERROR_PAGE;
-location = /$ERROR_PAGE {
-	      root    html;
-	      allow   all;
-	      index   404.html;
-	      rewrite ^ "'$scheme'":http://$ERROR_PAGE"'$request_uri'" permanent;
-		      }"
-		fi
-
+	else 
 		echo "location / {"
 
-	if [[ $HTTP_PORT != "" ]]; then
-		echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
-	else
-		echo "proxy_pass http://$LOCAL_IP:80;"
-	fi
+			if [[ $HTTP_PORT != "" ]]; then
+				echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+			else
+				echo "proxy_pass http://$LOCAL_IP:80;"
+			fi
  
 		echo "proxy_redirect off;
  proxy_buffering off;
