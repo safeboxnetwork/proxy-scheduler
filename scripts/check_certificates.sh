@@ -2,16 +2,26 @@
 
 # Set env variables
 	
+	DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL
 	LETSENCRYPT_URL=$LETSENCRYPT_URL
 	DOMAIN_DIR=$DOMAIN_DIR
 	DOMAIN=$1
 	DOMAIN_CERT_DIR=$CERT_DIR/$DOMAIN
 
+# Setup docker registry url path
+
+if [[ ! -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
+	SETUP="'/setup'";
+else
+	SETUP="setup";
+	$DOCKER_REGISTRY_URL="";
+fi
+
 service_exec="docker run --rm \
  -v /etc/user/config/user.json:/etc/user/config/user.json:ro \
  -v /etc/user/config/services/:/services/:ro \
  -v /var/run/docker.sock:/var/run/docker.sock \
- -v /usr/bin/docker:/usr/bin/docker:ro registry.format.hu/setup /scripts/service-exec"
+ -v /usr/bin/docker:/usr/bin/docker:ro $DOCKER_REGISTRY_URL$SETUP /scripts/service-exec"
 
 letsencrypt_certificates() {
 

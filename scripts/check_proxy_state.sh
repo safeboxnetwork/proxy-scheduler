@@ -1,8 +1,10 @@
 # Initial parameters
+
 DATE=`date +%F-%H-%M-%S`
 TIMEOUT=$TIMEOUT
 RESTART=$RESTART
 RESTART_COUNTER=0
+DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL
 
 # Set env variables
 DOMAIN="$1"
@@ -10,6 +12,15 @@ PROXY_SERVICE_FILE=$PROXY_SERVICE_FILE
 ROLE=$ROLE
 SERVICE_NAME=$SERVICE_NAME
 PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
+
+# Setup docker registry url path
+
+if [[ ! -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
+        SETUP="'/setup'";
+else
+        SETUP="setup";
+        $DOCKER_REGISTRY_URL="";
+fi
 
 service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker:ro registry.format.hu/setup /scripts/service-exec"
 
