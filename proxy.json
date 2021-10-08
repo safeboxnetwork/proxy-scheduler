@@ -1,0 +1,14 @@
+{
+	"proxy_scheduler": {
+		"DOCKER_REGISTRY_URL": "registry.format.hu",
+		"LETSENCRYPT_URL": "letsencrypt.org",
+		"CERT_DIR": "/keys",
+		"DOMAIN_DIR": "/domains",
+		"PROXY_SERVICE_FILE": "public-proxy.json",
+		"PROXY_CONFIG_DIR": "/proxy_config",
+		"TIMEOUT": "5",
+		"RESTART": "3",
+		"ROLE": "backend-proxy",
+		"SERVICE_NAME": "public-proxy"
+	}
+}
