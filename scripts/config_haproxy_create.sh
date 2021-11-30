@@ -33,7 +33,7 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
   
         if [[ "$(jq -r .REDIRECT_HTTPS $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
         then    
-            echo "redirect prefix https://$(jq -r .REDIRECT_HTTPS $i) hdr(host) code 301 if { hdr(host) -i $(jq -r .DOMAIN $i) }";
+            echo "redirect prefix https://$(jq -r .REDIRECT_HTTPS $i) code 301 if { hdr(host) -i $(jq -r .DOMAIN $i) }";
         fi
 done
 echo
