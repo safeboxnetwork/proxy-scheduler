@@ -15,14 +15,14 @@ PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
 # Setup docker registry url path
 
-if [[ ! -n "$REGISTRY_URL" ]] && [[ "$REGISTRY_URL" != "null" ]] ; then
+if [[ ! -z "$REGISTRY_URL" ]] || [[ "$REGISTRY_URL" != "null" ]] ; then
         SETUP="'/setup'";
 else
         SETUP="setup";
         $REGISTRY_URL="";
 fi
 
-service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker:ro registry.format.hu/setup /scripts/service-exec"
+service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker:ro $REGISTRY$SETUP /scripts/service-exec"
 
 do_proxy_restart() { 
 
