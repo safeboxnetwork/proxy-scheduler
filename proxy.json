@@ -1,6 +1,7 @@
 {
 	"proxy_scheduler": {
 		"DOCKER_REGISTRY_URL": "registry.format.hu",
+		"PROXY_TYPE": "",
 		"LETSENCRYPT_URL": "letsencrypt.org",
 		"CERT_DIR": "/keys",
 		"DOMAIN_DIR": "/domains",
