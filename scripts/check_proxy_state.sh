@@ -20,6 +20,7 @@ if [[ $REGISTRY_URL != "" ]] || [[ $REGISTRY_URL != "null" ]] ; then
 else
 
         echo "Docker registry URL not defined in configuration";
+	exit;
 fi
 
 service_exec="docker run --rm -v /etc/user/config/services/:/services/:ro -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker:ro $REGISTRY_URL$SETUP /scripts/service-exec"
