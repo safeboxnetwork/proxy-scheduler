@@ -14,7 +14,7 @@ if [[ ! -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
 	SETUP="'/setup'";
 else
 	SETUP="setup";
-	$DOCKER_REGISTRY_URL="";
+	DOCKER_REGISTRY_URL="";
 fi
 
 service_exec="docker run --rm \
