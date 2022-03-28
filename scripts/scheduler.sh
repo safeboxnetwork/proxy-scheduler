@@ -14,7 +14,7 @@ PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
 unset IFS
 
-inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,DELETE -r $DOMAIN_DIR $CERT_DIR | \
+inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,DELETE -r $DOMAIN_DIR $CERT_DIR $PROXY_CONFIG_DIR | \
 while read dir op file
 
 do 

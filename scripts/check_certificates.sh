@@ -4,6 +4,7 @@
 	
 	DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL
 	LETSENCRYPT_URL=$LETSENCRYPT_URL
+	CERT_DIR=$CERT_DIR
 	DOMAIN_DIR=$DOMAIN_DIR
 	DOMAIN=$1
 	DOMAIN_CERT_DIR=$CERT_DIR/$DOMAIN
@@ -19,8 +20,8 @@ fi
 
 service_exec="docker run --rm \
  -w /services/ \
- -v /etc/user/config/user.json:/etc/user/config/user.json:ro \
  -v /etc/user/config/services/:/services/:ro \
+ -v /etc/user/config/user.json:/etc/user/config/user.json:ro \
  -v /etc/user/config/services/tmp/:/services/tmp/:rw \
  -v /var/run/docker.sock:/var/run/docker.sock \
  -v /usr/bin/docker:/usr/bin/docker:ro $DOCKER_REGISTRY_URL$SETUP "
