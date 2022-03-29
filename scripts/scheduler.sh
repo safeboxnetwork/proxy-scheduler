@@ -23,13 +23,7 @@ do
 
  if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] ; then
 		DOMAIN=$(echo $dir|cut -d / -f3);
-		if [[ -f $CERT_DIR/$DOMAIN/renew_certificate && ! -f $PROXY_CONFIG_DIR/new_config ]]; then
-			rm $CERT_DIR/$DOMAIN/renew_certificate;
-			echo "New cert created: '$DOMAIN'";
-			echo "newcert check proxy";
-			/scripts/check_proxy_state.sh $DOMAIN;
-		
-		elif [[ -f $CERT_DIR/$DOMAIN/new_certificate && ! -f $PROXY_CONFIG_DIR/new_config ]]; then
+		if [[ -f $CERT_DIR/$DOMAIN/new_certificate ]]; then
 			rm $CERT_DIR/$DOMAIN/new_certificate;
 			echo "New cert created: '$DOMAIN'";
 			echo "newcert check proxy";
@@ -41,39 +35,29 @@ do
 		
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config created, changed";                                           
-		/scripts/config_haproxy_create.sh $DOMAIN;                                                
-		
-		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
-			/scripts/check_proxy_state.sh "$DOMAIN";                                  
-		fi                                                                                
+		/scripts/config_haproxy_create.sh $DOMAIN; 
 	else                                                                                      
 		echo "domain config created, changed";                                            
-		/scripts/nginx_config_create.sh "$DOMAIN";                                        
-												  
+		/scripts/nginx_config_create.sh "$DOMAIN";                                                
+	fi	
+
+elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
 		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
 			/scripts/check_proxy_state.sh "$DOMAIN";                                  
 		fi                                                                                
-	fi
 
- elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
+elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
 		DOMAIN=$(echo $file);
 		echo "domain deleted";
 		
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config deleted";                                           
 		/scripts/config_haproxy_create.sh;                                                
-		
-		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
-			/scripts/check_proxy_state.sh;                                  
-		fi                                                                                
-	else                                                                                      
-		if [ ! -f "$DOMAIN_DIR/$DOMAIN" ]; then
+                                                                                                                                                        
+	elif [ ! -f "$DOMAIN_DIR/$DOMAIN" ]; then
 			/scripts/nginx_config_create.sh "$DOMAIN" "DEL";
 			/scripts/check_proxy_state.sh "$DOMAIN" "DEL";
- 		fi
-	fi
-
- fi
-
+ 	fi
+fi
 
 done
