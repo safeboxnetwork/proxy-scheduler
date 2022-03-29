@@ -52,6 +52,7 @@ create_self_signed_certificate() {
 # generate key
 openssl req -x509 -newkey rsa:4096 -keyout $DOMAIN_CERT_DIR/key.pem -out $DOMAIN_CERT_DIR/cert.pem -days 365 -sha256 -nodes -subj "/CN=$DOMAIN";
 cp -a $DOMAIN_CERT_DIR/cert.pem $DOMAIN_CERT_DIR/fullchain.pem;
+touch $DOMAIN_CERT_DIR/new_certificate;
 
 }
 
