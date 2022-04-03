@@ -23,6 +23,7 @@
 		"DOCKER_REGISTRY_URL": "registry.format.hu",
 		"PROXY_TYPE": "",
 		"LETSENCRYPT_URL": "letsencrypt.org",
+		"LETSENCRYPT_SERVICE_NAME": "letsencrypt.json",
 		"CERT_DIR": "/keys",
 		"DOMAIN_DIR": "/domains",
 		"PROXY_SERVICE_FILE": "public-proxy.json",

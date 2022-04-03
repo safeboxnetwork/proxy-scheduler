@@ -26,9 +26,10 @@ service_exec="docker run --rm \
  -w /services/ \
  -v /etc/user/config/services/:/services/:ro \
  -v /etc/user/config/services/tmp/:/services/tmp/:rw \
- -v /etc/user/config/user.json:/etc/user/config/user.json:ro \
  -v /var/run/docker.sock:/var/run/docker.sock \
- -v /usr/bin/docker:/usr/bin/docker:ro $DOCKER_REGISTRY_URL$SETUP "
+ -v /usr/bin/docker:/usr/bin/docker:ro  \
+ --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
+ $DOCKER_REGISTRY_URL$SETUP"
 
 do_proxy_restart() { 
 
@@ -65,14 +66,6 @@ do_proxy_restart() {
 		fi
 	done
 	
-	# in case of new proxy configuration generated needed to copy the domain name  to the configs file.then remove new_config flag.
-	if [[ -f $PROXY_CONFIG_DIR/new_config ]] ; then 
-		if [[ ! -f $PROXY_CONFIG_DIR/config || "$(grep $DOMAIN $PROXY_CONFIG_DIR/config 2>/dev/null)" == "" ]] ; then 
-			cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/config;
-		fi
-		
-		rm $PROXY_CONFIG_DIR/new_config;
-	fi
 }
 
 check_domain() {
@@ -122,8 +115,7 @@ if [[ "$RUNNING_CONTAINERS" == "$CONTAINERS_BY_ROLE" || "$RUNNING_CONTAINERS" -g
 elif [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then 
 	echo "No running proxies found, starting all";
 	
-	$service_exec /services/$SERVICE_NAME.json stop;
-	$service_exec /services/$SERVICE_NAME.json start;
+	do_proxy_restart "$CONTAINERS";
 	
 	for proxies in $CONTAINERS ; do 
 
@@ -175,6 +167,15 @@ fi
 
 # call method
 check_proxy_state
+
+# in case of new proxy configuration generated needed to copy the domain name  to the configs file.then remove new_config flag.
+if [[ -f $PROXY_CONFIG_DIR/new_config ]] ; then 
+	if [[ ! -f $PROXY_CONFIG_DIR/config || "$(grep $DOMAIN $PROXY_CONFIG_DIR/config 2>/dev/null)" == "" ]] ; then 
+		cat $PROXY_CONFIG_DIR/new_config >> $PROXY_CONFIG_DIR/config;
+	fi
+	
+	rm $PROXY_CONFIG_DIR/new_config;
+fi
 
 # At last check the previously settings of domain.
 check_domain

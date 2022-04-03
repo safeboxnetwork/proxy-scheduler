@@ -4,10 +4,13 @@
 	
 	DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL
 	LETSENCRYPT_URL=$LETSENCRYPT_URL
+	LETSENCRYPT_SERVICE_NAME=$LETSENCRYPT_SERVICE_NAME
 	CERT_DIR=$CERT_DIR
 	DOMAIN_DIR=$DOMAIN_DIR
 	DOMAIN=$1
 	DOMAIN_CERT_DIR=$CERT_DIR/$DOMAIN
+	TIMEOUT=$TIMEOUT
+	RESTART=$RESTART
 
 # Setup docker registry url path
 
@@ -21,10 +24,10 @@ fi
 service_exec="docker run --rm \
  -w /services/ \
  -v /etc/user/config/services/:/services/:ro \
- -v /etc/user/config/user.json:/etc/user/config/user.json:ro \
  -v /etc/user/config/services/tmp/:/services/tmp/:rw \
  -v /var/run/docker.sock:/var/run/docker.sock \
- -v /usr/bin/docker:/usr/bin/docker:ro $DOCKER_REGISTRY_URL$SETUP "
+ -v /usr/bin/docker:/usr/bin/docker:ro  \
+ --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL $DOCKER_REGISTRY_URL$SETUP"
 
 letsencrypt_certificates() {
 
@@ -43,8 +46,29 @@ letsencrypt_certificates() {
 		echo "No running proxies found, create self signed cetificate";
 		create_self_signed_certificate;
 	fi;
+	
+	LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
+	
+	for retries in $(seq 0 $((RESTART + 1))); do
+		if [[ $retries -le $RESTART ]] ; then
+	
+			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
+				echo "Starting letsencrypt process";
+				$service_exec $LETSENCRYPT_SERVICE_NAME start ;
+				break;
+			else
+				echo "Waiting "$TIMEOUT" second for previous letsencrypt process ending";
+				sleep $TIMEOUT;
 
-	$service_exec /services/letsencrypt.json start
+				echo "Not reached number of restart limit: "$RESTART" sleep "$TIMEOUT" and try again to start lets encrypt process." 
+			fi
+		else
+				echo "Reached retrying limit: "$RESTART" ,giving up to start lets encrypt process, try self sign the certificate";
+				create_self_signed_certificate; 
+		fi
+
+	done
+
 }
 
 create_self_signed_certificate() { 
@@ -76,6 +100,10 @@ else
 	echo "{ \"DOMAIN\": \"$DOMAIN\" }"
 	} >> "$file"
 	letsencrypt_certificates;
+	
+	if [[ ! -f /acme.sh/$DOMAIN/key.pem && ! -f /acme.sh/$DOMAIN/fullchain.pem && ! -f /acme.sh/$DOMAIN/cert.pem ]] ; then
+		create_self_signed_certificate;
+	fi
 fi
 
 

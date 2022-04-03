@@ -57,7 +57,7 @@
 				 ],
 			"ENV_FILES": [ "/etc/system/config/proxy.json" ],
                         "EXTRA": "null",
-                        "DEPEND": "null",
+                        "DEPEND": { "public-proxy.networks.loadbalancer", "public-proxy.containers.loadbalancer-27dhuwdh" ],
                         "START_ON_BOOT": "true",
                         "CMD": "null",
                         "PRE_START": "null",
