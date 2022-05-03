@@ -16,7 +16,7 @@ HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
 HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE)
 LOCAL_IP=$(jq -r .LOCAL_IP $DOMAIN_SOURCE)
 ALIASES_HTTP=$(jq -r .ALIASES_HTTP $DOMAIN_SOURCE)
-ALIASES_HTTPS=$(jq -r .ALIASES_HTTPS $DOMAIN_SOURCE)
+ALIASES_HTTPS=$(jq -r '.ALIASES_HTTPS | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
 REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
 ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
@@ -37,9 +37,13 @@ file="/tmp/$DOMAIN.conf"
 
 if [[ $HTTP_PORT != "" ]]; then
 	echo "server {
-listen $HTTP_PORT;
-server_name $DOMAIN_NAME;
-rewrite_log on;"
+listen $HTTP_PORT;"
+if [[ $ALIASES_HTTPS != "" ]]; then
+	echo "server_name $DOMAIN_NAME $ALIASES_HTTPS;"
+else
+	echo "server_name $DOMAIN_NAME;"
+fi 
+echo "rewrite_log on;"
 
 
 	if [[ $REDIRECT_HTTP != "" && $HTTP_PORT != "" ]]; then
@@ -79,9 +83,15 @@ fi
 
 if [[ $HTTPS_PORT != "" ]]; then
 	echo "server {
-listen $HTTPS_PORT ssl;
-server_name $DOMAIN_NAME;
-rewrite_log on;
+listen $HTTPS_PORT ssl;"
+
+if [[ $ALIASES_HTTPS != "" ]]; then
+	echo "server_name $DOMAIN_NAME $ALIASES_HTTPS;"
+else
+	echo "server_name $DOMAIN_NAME;"
+fi 
+
+echo "rewrite_log on;
 proxy_ssl_server_name on; 
  ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;
  ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
