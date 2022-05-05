@@ -14,7 +14,7 @@
 	],
 	"containers": [
 		{ 
-			"IMAGE": "registry.format.hu/neilpang/acme.sh",
+			"IMAGE": "registry.format.hu/letsencrypt",
 			"NAME": "letsencrypt",
 			"MEMORY": "64M",
 			"IP": "172.18.254.254",
