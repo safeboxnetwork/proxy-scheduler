@@ -101,7 +101,7 @@ else
 	} >> "$file"
 	letsencrypt_certificates;
 	
-	if [[ ! -f /acme.sh/$DOMAIN/key.pem && ! -f /acme.sh/$DOMAIN/fullchain.pem && ! -f /acme.sh/$DOMAIN/cert.pem ]] ; then
+	if [[ ! -f /$DOMAIN_CERT_DIR/key.pem && ! -f /$DOMAIN_CERT_DIR/fullchain.pem && ! -f /$DOMAIN_CERT_DIR/cert.pem ]] ; then
 		create_self_signed_certificate;
 	fi
 fi
