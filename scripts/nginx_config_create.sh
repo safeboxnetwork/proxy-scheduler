@@ -15,7 +15,7 @@ DOMAIN_NAME=$(jq -r .DOMAIN $DOMAIN_SOURCE)
 HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
 HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE)
 LOCAL_IP=$(jq -r .LOCAL_IP $DOMAIN_SOURCE)
-ALIASES_HTTP=$(jq -r .ALIASES_HTTP $DOMAIN_SOURCE)
+ALIASES_HTTP=$(jq -r '.ALIASES_HTTP | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 ALIASES_HTTPS=$(jq -r '.ALIASES_HTTPS | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
 REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
@@ -38,8 +38,8 @@ file="/tmp/$DOMAIN.conf"
 if [[ $HTTP_PORT != "" ]]; then
 	echo "server {
 listen $HTTP_PORT;"
-if [[ $ALIASES_HTTPS != "" ]]; then
-	echo "server_name $DOMAIN_NAME $ALIASES_HTTPS;"
+if [[ $ALIASES_HTTP != "" ]]; then
+	echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
 else
 	echo "server_name $DOMAIN_NAME;"
 fi 
