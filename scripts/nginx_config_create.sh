@@ -20,7 +20,7 @@ ALIASES_HTTPS=$(jq -r '.ALIASES_HTTPS | select(.!="null") | join(" ")' $DOMAIN_S
 REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
 REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
 ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
-
+MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
 # check whether certificates exist or not
 
 if [[ $HTTPS_PORT != "" ]]; then
@@ -42,6 +42,12 @@ if [[ $ALIASES_HTTP != "" ]]; then
 	echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
 else
 	echo "server_name $DOMAIN_NAME;"
+fi 
+
+if [[ $MAX_BODY_SIZE != "" ]]; then
+	echo "client_max_body_size "$MAX_BODY_SIZE";"
+else
+	echo "client_max_body_size 16M"
 fi 
 echo "rewrite_log on;"
 
@@ -89,6 +95,12 @@ if [[ $ALIASES_HTTPS != "" ]]; then
 	echo "server_name $DOMAIN_NAME $ALIASES_HTTPS;"
 else
 	echo "server_name $DOMAIN_NAME;"
+fi 
+
+if [[ $MAX_BODY_SIZE != "" ]]; then
+	echo "client_max_body_size "$MAX_BODY_SIZE";"
+else
+	echo "client_max_body_size 16M"
 fi 
 
 echo "rewrite_log on;
