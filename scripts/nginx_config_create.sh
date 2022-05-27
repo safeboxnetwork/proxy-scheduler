@@ -21,9 +21,11 @@ REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
 REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
 ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
+ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
 # check whether certificates exist or not
 
-if [[ $HTTPS_PORT != "" ]]; then
+
+if [[ "$HTTPS_PORT" != "" ]]; then
 	/scripts/check_certificates.sh "$DOMAIN";
 fi
 
@@ -35,16 +37,16 @@ file="/tmp/$DOMAIN.conf"
 
 {
 
-if [[ $HTTP_PORT != "" ]]; then
+if [[ "$HTTP_PORT" != "" ]]; then
 	echo "server {
 listen $HTTP_PORT;"
-if [[ $ALIASES_HTTP != "" ]]; then
+if [[ "$ALIASES_HTTP" != "" ]]; then
 	echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
 else
 	echo "server_name $DOMAIN_NAME;"
 fi 
 
-if [[ $MAX_BODY_SIZE != "" ]]; then
+if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
 else
 	echo "client_max_body_size 16M"
@@ -52,14 +54,14 @@ fi
 echo "rewrite_log on;"
 
 
-	if [[ $REDIRECT_HTTP != "" && $HTTP_PORT != "" ]]; then
+	if [[ "$REDIRECT_HTTP" != "" && "$HTTP_PORT" != "" ]]; then
 		echo "return 301 $REDIRECT_HTTP;"
 
 
 	else
 		echo "location / {"
 	
-		if [[ $HTTP_PORT != "" ]]; then
+		if [[ "$HTTP_PORT" != "" ]]; then
  			echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
 		else
  			echo "proxy_pass http://$LOCAL_IP:80;"
@@ -73,7 +75,7 @@ echo "rewrite_log on;"
 		 proxy_cookie_path / /;
 		 access_log off;"
 			
-			if [[ $ERROR_PAGE != "" && $HTTP_PORT != "" ]]; then
+			if [[ "$ERROR_PAGE" != "" && "$HTTP_PORT" != "" ]]; then
 				echo "error_page 404 /$ERROR_PAGE;
 				location = /$ERROR_PAGE {
 				      root    html;
@@ -87,17 +89,17 @@ echo "rewrite_log on;"
 echo "}"
 fi
 
-if [[ $HTTPS_PORT != "" ]]; then
+if [[ "$HTTPS_PORT" != "" ]]; then
 	echo "server {
 listen $HTTPS_PORT ssl;"
 
-if [[ $ALIASES_HTTPS != "" ]]; then
+if [[ "$ALIASES_HTTPS" != "" ]]; then
 	echo "server_name $DOMAIN_NAME $ALIASES_HTTPS;"
 else
 	echo "server_name $DOMAIN_NAME;"
 fi 
 
-if [[ $MAX_BODY_SIZE != "" ]]; then
+if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
 else
 	echo "client_max_body_size 16M"
@@ -116,7 +118,7 @@ ssl_session_timeout 5m;
 ssl_stapling on;"
 
 
-	if [[ $ERROR_PAGE != "" && $HTTPS_PORT != "" ]]; then
+	if [[ "$ERROR_PAGE" != "" && "$HTTPS_PORT" != "" ]]; then
 		echo "error_page 404 /$ERROR_PAGE;
 location = /$ERROR_PAGE {
       root    html;
@@ -126,25 +128,69 @@ location = /$ERROR_PAGE {
 	      }"
 	fi
 
-	if [[ $REDIRECT_HTTPS != ""  ]]; then
+	if [[ "$REDIRECT_HTTPS" != ""  ]]; then
 		echo "return 301 $REDIRECT_HTTPS;"
 	else 
 		echo "location / {"
 
-			if [[ $HTTP_PORT != "" ]]; then
-				echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+			if [[ "$HTTP_PORT" != "" ]]; then
+				echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
 			else
-				echo "proxy_pass http://$LOCAL_IP:80;"
+				echo " proxy_pass http://$LOCAL_IP:80;"
 			fi
  
-		echo "proxy_redirect off;
+		echo " proxy_redirect off;
  proxy_buffering off;
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
  proxy_set_header Upgrade "'$http_upgrade'";
  proxy_set_header Connection "'$http_connection'";
+ proxy_set_header Host "'$host'";
  proxy_cookie_path / /;
  access_log off;
 }"
+
+		if [[ "$ALTERNATE_LOCATION_PATH" != "" ]]; then
+
+			ALP_IDX=$(jq -r '.ALTERNATE_LOCATION_PATH | length' $DOMAIN_SOURCE)
+			ALP_IDX=$(( $ALP_IDX - 1 ))
+
+			for i in $(seq 0 $ALP_IDX) ;
+			do
+				ALP=$(jq -r .ALTERNATE_LOCATION_PATH[$i] $DOMAIN_SOURCE)
+
+				ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
+				ALP_LOCAL_IP=$(echo $ALP | jq -rc .LOCAL_IP);
+				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
+
+				if [[ "$ALP_LOCAL_IP" = "" ]]; then
+					ALP_LOCAL_IP=$LOCAL_IP
+				fi;
+
+				if [[ "$ALP_LOCAL_PORT" = "" ]]; then
+					ALP_LOCAL_PORT=$HTTP_PORT
+				fi;
+
+				echo "location $ALP_LOCAL_PATH {"
+
+				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
+					echo " proxy_pass http://$ALP_LOCAL_IP:$ALP_LOCAL_PORT;"
+				else
+					echo " proxy_pass http://$ALP_LOCAL_IP:80;"
+				fi
+ 
+
+		echo " proxy_redirect off;
+ proxy_buffering off;
+ proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
+ proxy_set_header Upgrade "'$http_upgrade'";
+ proxy_set_header Connection "'$http_connection'";
+ proxy_set_header Host "'$host'"; 
+ proxy_cookie_path $ALP_LOCAL_PATH $ALP_LOCAL_PATH;
+ access_log off;
+}"
+			done;
+		fi;
+
 	fi
 
 echo "}"
