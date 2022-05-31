@@ -1,17 +1,18 @@
 {
-"DOMAIN": "mandatory.tld",
+"DEBUG": "true",
+"DOMAIN": "same_name_as_the_file",
 "ALIASES_HTTP": [ ],
 "ALIASES_HTTPS": [ ],
 "LOCAL_IP": "mandatory_IP",
 "HTTP_PORT": "",
-"HTTPS_PORT": "",
+"HTTPS_PORT": "mandatory",
 "ERROR_PAGE": "",
 "REDIRECT_HTTP": "",
 "REDIRECT_HTTPS": "",
-"MAX_BODY_SIZE": "",
-"ALLOWED_NETWORK": 
-"ALTERNATE_LOCATION_PATH": [ "IP/subnet_if_not_32", "IP/subnet_if_not_32" ],
-        {
+"MAX_BODY_SIZE": "if_not_set_it_will_be_unlimited",
+"ALLOWED_NETWORK": [ "IP/subnet_if_not_32", "IP/subnet_if_not_32" ],
+"ALTERNATE_LOCATION_PATH":         
+	{
         "LOCAL_PATH": "",
         "LOCAL_IP": "mandatory_if_path_exists",
         "LOCAL_PORT": "default_80_if_empty",

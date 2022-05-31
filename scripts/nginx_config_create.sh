@@ -10,7 +10,6 @@ if [ -n "$2" ]; then
 fi
 
 DOMAIN_SOURCE=/domains/$DOMAIN
-
 DOMAIN_NAME=$(jq -r .DOMAIN $DOMAIN_SOURCE)
 HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
 HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE)
@@ -22,7 +21,7 @@ REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
 ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
 DEBUG=$(jq -r .DEBUG $DOMAIN_SOURCE)
-ALLOWED_NETWORK=$(jq -r .ALLOWED_NETWORK $DOMAIN_SOURCE)
+ALLOWED_NETWORK=$(jq -r '.ALLOWED_NETWORK | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
 # check whether certificates exist or not
 
@@ -53,7 +52,7 @@ fi
 if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
 else
-	echo "client_max_body_size 0"
+	echo "client_max_body_size 0;"
 fi 
 echo "rewrite_log on;"
 
@@ -82,7 +81,7 @@ echo "rewrite_log on;"
  			echo " proxy_pass http://$LOCAL_IP:80;"
 		fi
 
-		echo "proxy_set_header Host "'$http_host'";
+		echo " proxy_set_header Host "'$http_host'";
  proxy_set_header X-Real-IP "'$remote_addr'";
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
  proxy_set_header X-Forwarded-Proto "'$scheme'";
@@ -125,7 +124,7 @@ fi
 if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
 else
-	echo "client_max_body_size 0"
+	echo "client_max_body_size 0;"
 fi 
 
 echo "rewrite_log on;
@@ -199,7 +198,7 @@ location = /$ERROR_PAGE {
 				ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
 				ALP_LOCAL_IP=$(echo $ALP | jq -rc .LOCAL_IP);
 				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
-				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc .LOCAL_ALLOWED_NETWORK);
+				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc '.LOCAL_ALLOWED_NETWORK | select(.!="null") | join(" ")');
 
 				if [[ "$ALP_LOCAL_IP" = "" ]]; then
 					ALP_LOCAL_IP=$LOCAL_IP
@@ -213,12 +212,8 @@ location = /$ERROR_PAGE {
 
 				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
 
-				ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
-				ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
-				
-				for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
-						AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
-						echo "     allow "$AN";"
+				for i in $(echo $ALP_LOCAL_ALLOWED_NETWORK) ; do
+						echo "     allow "$i";"
 				done
 						echo "     deny  all;"
 				fi
