@@ -21,6 +21,8 @@ REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
 REDIRECT_HTTPS=$(jq -r .REDIRECT_HTTPS $DOMAIN_SOURCE)
 ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
+DEBUG=$(jq -r .DEBUG $DOMAIN_SOURCE)
+ALLOWED_NETWORK=$(jq -r .ALLOWED_NETWORK $DOMAIN_SOURCE)
 ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
 # check whether certificates exist or not
 
@@ -39,7 +41,9 @@ file="/tmp/$DOMAIN.conf"
 
 if [[ "$HTTP_PORT" != "" ]]; then
 	echo "server {
-listen $HTTP_PORT;"
+listen $HTTP_PORT proxy_protocol;
+set_real_ip_from 0.0.0.0/0;
+real_ip_header proxy_protocol;"
 if [[ "$ALIASES_HTTP" != "" ]]; then
 	echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
 else
@@ -49,7 +53,7 @@ fi
 if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
 else
-	echo "client_max_body_size 16M"
+	echo "client_max_body_size 0"
 fi 
 echo "rewrite_log on;"
 
@@ -60,38 +64,57 @@ echo "rewrite_log on;"
 
 	else
 		echo "location / {"
-	
+		
+		if [[ "$ALLOWED_NETWORK" != "" ]]; then
+			ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
+			ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
+			
+			for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
+					AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
+					echo "     allow "$AN";"
+			done
+			echo "     deny  all;"
+	 	fi	
+
 		if [[ "$HTTP_PORT" != "" ]]; then
- 			echo "proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+ 			echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
 		else
- 			echo "proxy_pass http://$LOCAL_IP:80;"
+ 			echo " proxy_pass http://$LOCAL_IP:80;"
 		fi
 
-		 echo "proxy_redirect off;
-		 proxy_buffering off;
-		 proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
-		 proxy_set_header Upgrade "'$http_upgrade'";
-		 proxy_set_header Connection "'$http_connection'";
-		 proxy_cookie_path / /;
-		 access_log off;"
-			
-			if [[ "$ERROR_PAGE" != "" && "$HTTP_PORT" != "" ]]; then
-				echo "error_page 404 /$ERROR_PAGE;
-				location = /$ERROR_PAGE {
-				      root    html;
-				      allow   all;
-				      index   404.html;
-				      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
-					      }"
-			fi
+		echo "proxy_set_header Host "'$http_host'";
+ proxy_set_header X-Real-IP "'$remote_addr'";
+ proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
+ proxy_set_header X-Forwarded-Proto "'$scheme'";
+ proxy_set_header Upgrade "'$http_upgrade;'"
+ proxy_cookie_path / /;
+ proxy_set_header Connection "'$http_connection'" ;"
+
+		if [[ "$DEBUG" != "true" ]]; then
+		 	echo " access_log off;"
+		fi
+		echo " proxy_redirect off;"
+		echo " proxy_buffering off;"
 		echo "}"
+			
+		if [[ "$ERROR_PAGE" != "" && "$HTTP_PORT" != "" ]]; then
+			echo "error_page 404 /$ERROR_PAGE;
+			location = /$ERROR_PAGE {
+			      root    html;
+			      allow   all;
+			      index   404.html;
+			      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
+				      }"
+		fi
 	fi
 echo "}"
 fi
 
 if [[ "$HTTPS_PORT" != "" ]]; then
 	echo "server {
-listen $HTTPS_PORT ssl;"
+listen $HTTPS_PORT ssl proxy_protocol;
+set_real_ip_from 0.0.0.0/0;
+real_ip_header proxy_protocol;"
 
 if [[ "$ALIASES_HTTPS" != "" ]]; then
 	echo "server_name $DOMAIN_NAME $ALIASES_HTTPS;"
@@ -102,7 +125,7 @@ fi
 if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
 else
-	echo "client_max_body_size 16M"
+	echo "client_max_body_size 0"
 fi 
 
 echo "rewrite_log on;
@@ -133,21 +156,36 @@ location = /$ERROR_PAGE {
 	else 
 		echo "location / {"
 
+		if [[ "$ALLOWED_NETWORK" != "" ]]; then
+			ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
+			ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
+			
+			for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
+					AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
+					echo "     allow "$AN";"
+			done
+			echo "     deny  all;"
+	 	fi	
 			if [[ "$HTTP_PORT" != "" ]]; then
 				echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
 			else
 				echo " proxy_pass http://$LOCAL_IP:80;"
 			fi
  
-		echo " proxy_redirect off;
- proxy_buffering off;
+		echo " proxy_set_header Host "'$http_host'";
+ proxy_set_header X-Real-IP "'$remote_addr'";
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
- proxy_set_header Upgrade "'$http_upgrade'";
- proxy_set_header Connection "'$http_connection'";
- proxy_set_header Host "'$host'";
+ proxy_set_header X-Forwarded-Proto "'$scheme'";
+ proxy_set_header Upgrade "'$http_upgrade;'"
  proxy_cookie_path / /;
- access_log off;
-}"
+ proxy_set_header Connection "'$http_connection'";"
+
+		if [[ "$DEBUG" != "true" ]]; then
+		 	echo " access_log off;"
+		fi
+		echo " proxy_redirect off;"
+		echo " proxy_buffering off;"
+		echo "}"
 
 		if [[ "$ALTERNATE_LOCATION_PATH" != "" ]]; then
 
@@ -161,6 +199,7 @@ location = /$ERROR_PAGE {
 				ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
 				ALP_LOCAL_IP=$(echo $ALP | jq -rc .LOCAL_IP);
 				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
+				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc .LOCAL_ALLOWED_NETWORK);
 
 				if [[ "$ALP_LOCAL_IP" = "" ]]; then
 					ALP_LOCAL_IP=$LOCAL_IP
@@ -172,22 +211,38 @@ location = /$ERROR_PAGE {
 
 				echo "location $ALP_LOCAL_PATH {"
 
+				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
+
+				ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
+				ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
+				
+				for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
+						AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
+						echo "     allow "$AN";"
+				done
+						echo "     deny  all;"
+				fi
+
 				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
 					echo " proxy_pass http://$ALP_LOCAL_IP:$ALP_LOCAL_PORT;"
 				else
 					echo " proxy_pass http://$ALP_LOCAL_IP:80;"
 				fi
  
-
-		echo " proxy_redirect off;
- proxy_buffering off;
+				echo " proxy_set_header Host "'$http_host'";
+ proxy_set_header X-Real-IP "'$remote_addr'";
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
- proxy_set_header Upgrade "'$http_upgrade'";
- proxy_set_header Connection "'$http_connection'";
- proxy_set_header Host "'$host'"; 
+ proxy_set_header X-Forwarded-Proto "'$scheme'";
+ proxy_set_header Upgrade "'$http_upgrade;'"
  proxy_cookie_path $ALP_LOCAL_PATH $ALP_LOCAL_PATH;
- access_log off;
-}"
+ proxy_set_header Connection "'$http_connection'";"
+
+				if [[ "$DEBUG" != "true" ]]; then
+					echo " access_log off;"
+				fi
+				echo " proxy_redirect off;"
+				echo " proxy_buffering off;"
+				echo "}"
 			done;
 		fi;
 
