@@ -1,4 +1,4 @@
-bind :443
+bind :443 accept-proxy
   mode tcp
   option tcplog
   option dontlognull

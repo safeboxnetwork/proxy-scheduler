@@ -1,4 +1,4 @@
-bind :80
+bind :80 accept-proxy
   mode http
   option forwardfor  
   option httplog
