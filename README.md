@@ -9,3 +9,7 @@ The proxy-scheduler use inotify kernel solution to watch changes and execute act
 ## PROXY.JSON keys explanation ##
 
 The proxy.json file must be filled in almost, some cases like "PROXY_TYPE" must be filled when the loadbalancer service use Haproxy applications in the backend (the configuration generating is another)
+
+|           KEY           |           VALUE                                      |
+|DOCKER_REGISTRY_URL      | Docker image pathes, not mandatory                   |
+| PROXY_TYPE              | Filled as "haproxy" when it is a public loadbalancer |   
