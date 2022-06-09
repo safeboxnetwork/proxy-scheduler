@@ -6,4 +6,6 @@ All the proxy services needed the proxy.json configuration file with proper cont
 
 The proxy-scheduler use inotify kernel solution to watch changes and execute action in the proxy processes at all.
 
-Read carefuly the readmes for the proxy.json file and the domain.sample file also.
+-- PROXY.JSON keys explanation --
+
+The proxy.json file must be filled in almost, some cases like "PROXY_TYPE" must be filled when the loadbalancer service use Haproxy applications in the backend (the configuration generating is another)
