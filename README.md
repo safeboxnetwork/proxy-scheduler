@@ -6,11 +6,17 @@ All the proxy services needed the proxy.json configuration file with proper cont
 
 The proxy-scheduler use inotify kernel solution to watch changes and execute action in the proxy processes at all.
 
+The proxy scheduler use Let's Encrypt service to certifying domains
+
 ## PROXY.JSON keys explanation ##
 
-The proxy.json file must be filled in almost, some cases like "PROXY_TYPE" must be filled when the loadbalancer service use Haproxy applications in the backend (the configuration generating is another)
+The proxy.json file must be filled in almost, exept two cases:
+1. "PROXY_TYPE" must be filled when the loadbalancer service use Haproxy applications in the backend (the configuration generating is another)
+2. "LETSENCRYPT_SERVICE_NAME": if it is empty, self signed certificates will made only
 
 | KEY| VALUE|
 |-|-|
 | DOCKER_REGISTRY_URL| Docker image pathes, not mandatory|
-| PROXY_TYPE| Filled as "haproxy" when it is a public loadbalancer|   
+| PROXY_TYPE| Filled as "haproxy" when it is a public loadbalancer|
+| LETSENCRYPT_URL| Path for letsencrypt service image|
+| LETSENCRYPT_SERVICE_NAME| Let's encrypt service name| 
