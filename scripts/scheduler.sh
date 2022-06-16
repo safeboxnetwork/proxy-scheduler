@@ -31,8 +31,9 @@ do
 		fi
  
  elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
-		DOMAIN=$(echo $file);
-		
+
+	DOMAIN=$(echo $file);
+
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config created, changed";                                           
 		/scripts/config_haproxy_create.sh $DOMAIN; 
@@ -42,9 +43,13 @@ do
 	fi	
 
 elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
+
+	if [[ $file != "new_config" && $file != "config" ]]; then
+		DOMAIN=$(echo "${file%.*}");
 		if [ -f "$PROXY_CONFIG_DIR/new_config" ] ; then                                   
 			/scripts/check_proxy_state.sh "$DOMAIN";                                  
-		fi                                                                                
+		fi 
+	fi;
 
 elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
 		DOMAIN=$(echo $file);

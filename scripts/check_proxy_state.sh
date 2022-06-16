@@ -13,6 +13,7 @@ ROLE=$ROLE
 SERVICE_NAME=$SERVICE_NAME
 PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
+
 # Setup docker registry url path
 
 if [[ -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
@@ -168,6 +169,7 @@ fi
 # call method
 check_proxy_state
 
+echo "PROXY RESTARTED SUCCESSFULY"
 # in case of new proxy configuration generated needed to copy the domain name  to the configs file.then remove new_config flag.
 if [[ -f $PROXY_CONFIG_DIR/new_config ]] ; then 
 	if [[ ! -f $PROXY_CONFIG_DIR/config || "$(grep $DOMAIN $PROXY_CONFIG_DIR/config 2>/dev/null)" == "" ]] ; then 
