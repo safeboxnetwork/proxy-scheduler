@@ -176,7 +176,11 @@ location = /$ERROR_PAGE {
  proxy_set_header X-Forwarded-Proto "'$scheme'";
  proxy_set_header Upgrade "'$http_upgrade;'"
  proxy_cookie_path / /;
- proxy_set_header Connection "'$http_connection'";"
+ proxy_set_header Connection "'$http_connection'";
+ proxy_connect_timeout      300;
+ proxy_send_timeout         300;
+ proxy_read_timeout         300;
+ proxy_next_upstream off;"
 
 		if [[ "$DEBUG" != "true" ]]; then
 		 	echo " access_log off;"
@@ -229,7 +233,11 @@ location = /$ERROR_PAGE {
  proxy_set_header X-Forwarded-Proto "'$scheme'";
  proxy_set_header Upgrade "'$http_upgrade;'"
  proxy_cookie_path $ALP_LOCAL_PATH $ALP_LOCAL_PATH;
- proxy_set_header Connection "'$http_connection'";"
+ proxy_set_header Connection "'$http_connection'";
+ proxy_connect_timeout      300;
+ proxy_send_timeout         300;
+ proxy_read_timeout         300;
+ proxy_next_upstream off;"
 
 				if [[ "$DEBUG" != "true" ]]; then
 					echo " access_log off;"
