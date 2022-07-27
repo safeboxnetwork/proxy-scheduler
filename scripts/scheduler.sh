@@ -13,9 +13,6 @@ PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 # If not exits CERT_DIR, create it
 mkdir -p $CERT_DIR
 
-# If not exits DOMAIN_DIR, create it
-mkdir -p $DOMAIN_DIR
-
 # Triggers by certificate or domain config changes
 
 unset IFS
