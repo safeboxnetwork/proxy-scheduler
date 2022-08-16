@@ -69,7 +69,7 @@ do_proxy_restart() {
 
 check_domain() {
 	echo "Checking $DOMAIN name";
-	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN";
+	CURL_CHECK="curl -m 5 -s -o /dev/null -w "%{http_code}" https://$DOMAIN";
 	if [[ "$(eval $CURL_CHECK)" == "200" ]] ; then 
 		echo "$DOMAIN accessed successful";
 	else 
