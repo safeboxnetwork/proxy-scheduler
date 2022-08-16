@@ -36,21 +36,19 @@ do_proxy_restart() {
 
         local NAMES="$1"
 
-	for proxies in $NAMES ; do 
-		docker stop $proxies;
-		sleep $TIMEOUT;
-		$service_exec $SERVICE_NAME.containers.$proxies start
-		if docker ps | grep $proxies ; then
+	for PROXY_NAME in $NAMES ; do 
+		docker stop $PROXY_NAME;
+		docker start $PROXY_NAME;
+		if docker ps | grep $PROXY_NAME ; then
 			if [ -z "$DOMAIN" ] ; then
-				echo "$proxies restarted successful";
+				echo "$PROXY_NAME restarted successful";
 			fi
 		else 
-			PROXY_NAME=$proxies
 			for retries in $(seq 0 $((RESTART + 1))); do
 				if [[ $retries -le $RESTART ]] ; then
-					echo "Proxy "$PROXY_NAME" restarting in progress";
-					docker stop $PROXY_NAME;
 					sleep $TIMEOUT;
+					echo "Proxy "$PROXY_NAME" restarting in progress";
+					$service_exec $SERVICE_NAME.containers.$PROXY_NAME stop force;
 					$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
 						if docker ps | grep $PROXY_NAME ; then
 							echo "$PROXY_NAME restarted successful";
