@@ -38,27 +38,38 @@ file="/tmp/$DOMAIN.conf"
 {
 
 if [[ "$HTTP_PORT" != "" ]]; then
+	DEFAULT_HTTP_PORT=$HTTP_PORT;
+	
+	if [[ "$HTTP_PORT" == "" ]]; then
+		DEFAULT_HTTP_PORT="80";
+	fi
+	
 	echo "server {
-listen $HTTP_PORT proxy_protocol;
+listen $DEFAULT_HTTP_PORT proxy_protocol;
 set_real_ip_from 0.0.0.0/0;
 real_ip_header proxy_protocol;"
-if [[ "$ALIASES_HTTP" != "" ]]; then
-	echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
-else
-	echo "server_name $DOMAIN_NAME;"
-fi 
 
-if [[ "$MAX_BODY_SIZE" != "" ]]; then
+	if [[ "$ALIASES_HTTP" != "" ]]; then
+		echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
+	else
+		echo "server_name $DOMAIN_NAME;"
+	fi 
+	
+	if [[ "$MAX_BODY_SIZE" != "" ]]; then
 	echo "client_max_body_size "$MAX_BODY_SIZE";"
-else
+	
+	else
+	
 	echo "client_max_body_size 0;"
-fi 
+	fi 
+
 echo "rewrite_log on;"
 
 
-	if [[ "$REDIRECT_HTTP" != "" && "$HTTP_PORT" != "" ]]; then
+	if [[ "$REDIRECT_HTTP" != "" &&  "$HTTP_PORT" != "" ]] ; then 
 		echo "return 301 $REDIRECT_HTTP;"
-
+	elif [[  "$HTTP_PORT" == "" ]]; then
+		echo "return 301 https://"$DOMAIN_NAME;
 
 	else
 		echo "location / {"
@@ -75,9 +86,7 @@ echo "rewrite_log on;"
 	 	fi	
 
 		if [[ "$HTTP_PORT" != "" ]]; then
- 			echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
-		else
- 			echo " proxy_pass http://$LOCAL_IP:80;"
+ 			echo " proxy_pass http://$LOCAL_IP:$DEFAULT_HTTP_PORT;"
 		fi
 
 		echo " proxy_set_header Host "'$http_host'";
