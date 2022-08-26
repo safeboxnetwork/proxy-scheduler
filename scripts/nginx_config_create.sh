@@ -45,7 +45,7 @@ if [[ "$HTTP_PORT" != "" ]]; then
 	fi
 	
 	echo "server {
-listen $DEFAULT_HTTP_PORT proxy_protocol;
+listen 80 proxy_protocol;
 set_real_ip_from 0.0.0.0/0;
 real_ip_header proxy_protocol;"
 
@@ -66,7 +66,7 @@ real_ip_header proxy_protocol;"
 echo "rewrite_log on;"
 
 
-	if [[ "$REDIRECT_HTTP" != "" &&  "$HTTP_PORT" != "" ]] ; then 
+	if [[ "$REDIRECT_HTTP" != "" ]] ; then 
 		echo "return 301 $REDIRECT_HTTP;"
 	elif [[  "$HTTP_PORT" == "" ]]; then
 		echo "return 301 https://"$DOMAIN_NAME;
@@ -86,7 +86,7 @@ echo "rewrite_log on;"
 	 	fi	
 
 		if [[ "$HTTP_PORT" != "" ]]; then
- 			echo " proxy_pass http://$LOCAL_IP:$DEFAULT_HTTP_PORT;"
+ 			echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
 		fi
 
 		echo " proxy_set_header Host "'$http_host'";
@@ -119,7 +119,7 @@ fi
 
 if [[ "$HTTPS_PORT" != "" ]]; then
 	echo "server {
-listen $HTTPS_PORT ssl proxy_protocol;
+listen 443 ssl proxy_protocol;
 set_real_ip_from 0.0.0.0/0;
 real_ip_header proxy_protocol;"
 
@@ -173,8 +173,8 @@ location = /$ERROR_PAGE {
 			done
 			echo "     deny  all;"
 	 	fi	
-			if [[ "$HTTP_PORT" != "" ]]; then
-				echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+			if [[ "$HTTPS_PORT" != "" ]]; then
+				echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
 			else
 				echo " proxy_pass http://$LOCAL_IP:80;"
 			fi
