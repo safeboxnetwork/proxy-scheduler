@@ -33,7 +33,7 @@ do
 			/scripts/check_proxy_state.sh $DOMAIN;
 		fi
  
- elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
+ elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE,MOVED_TO" ]]; then
 
 	DOMAIN=$(echo $file);
 
