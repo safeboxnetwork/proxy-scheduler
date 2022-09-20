@@ -37,15 +37,19 @@ file="/tmp/$DOMAIN.conf"
 
 {
 
-if [[ "$HTTP_PORT" != "" ]]; then
-	DEFAULT_HTTP_PORT=$HTTP_PORT;
-	
-	if [[ "$HTTP_PORT" == "" ]]; then
-		DEFAULT_HTTP_PORT="80";
-	fi
-	
+if [[ "$HTTP_PORT" != "80" || "$HTTP_PORT" == "" ]]; then
 	echo "server {
 listen 80 proxy_protocol;
+set_real_ip_from 0.0.0.0/0;
+real_ip_header proxy_protocol;
+rewrite_log on;
+return 301 https://$DOMAIN_NAME;
+}"
+
+fi	
+
+echo "server {
+listen $HTTP_PORT proxy_protocol;
 set_real_ip_from 0.0.0.0/0;
 real_ip_header proxy_protocol;"
 
@@ -115,7 +119,6 @@ echo "rewrite_log on;"
 		fi
 	fi
 echo "}"
-fi
 
 if [[ "$HTTPS_PORT" != "" ]]; then
 	echo "server {
@@ -173,11 +176,7 @@ location = /$ERROR_PAGE {
 			done
 			echo "     deny  all;"
 	 	fi	
-			if [[ "$HTTPS_PORT" != "" ]]; then
-				echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
-			else
-				echo " proxy_pass http://$LOCAL_IP:80;"
-			fi
+echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
  
 		echo " proxy_set_header Host "'$http_host'";
  proxy_set_header X-Real-IP "'$remote_addr'";
