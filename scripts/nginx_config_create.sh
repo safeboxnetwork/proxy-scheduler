@@ -37,7 +37,7 @@ file="/tmp/$DOMAIN.conf"
 
 {
 
-if [[ "$HTTP_PORT" != "80" || "$HTTP_PORT" == "" ]]; then
+if [[ "$HTTP_PORT" != "80" ]]; then
 	echo "server {
 listen 80 proxy_protocol;
 set_real_ip_from 0.0.0.0/0;
@@ -48,77 +48,79 @@ return 301 https://$DOMAIN_NAME;
 
 fi	
 
-echo "server {
-listen $HTTP_PORT proxy_protocol;
-set_real_ip_from 0.0.0.0/0;
-real_ip_header proxy_protocol;"
-
-	if [[ "$ALIASES_HTTP" != "" ]]; then
-		echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
-	else
-		echo "server_name $DOMAIN_NAME;"
-	fi 
+if [[ "$HTTP_PORT" != "" || "$HTTP_PORT" != "80" ]]; then
+	echo "server {
+	listen $HTTP_PORT proxy_protocol;
+	set_real_ip_from 0.0.0.0/0;
+	real_ip_header proxy_protocol;"
 	
-	if [[ "$MAX_BODY_SIZE" != "" ]]; then
-	echo "client_max_body_size "$MAX_BODY_SIZE";"
-	
-	else
-	
-	echo "client_max_body_size 0;"
-	fi 
-
-echo "rewrite_log on;"
-
-
-	if [[ "$REDIRECT_HTTP" != "" ]] ; then 
-		echo "return 301 $REDIRECT_HTTP;"
-	elif [[  "$HTTP_PORT" == "" ]]; then
-		echo "return 301 https://"$DOMAIN_NAME;
-
-	else
-		echo "location / {"
+		if [[ "$ALIASES_HTTP" != "" ]]; then
+			echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
+		else
+			echo "server_name $DOMAIN_NAME;"
+		fi 
 		
-		if [[ "$ALLOWED_NETWORK" != "" ]]; then
-			ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
-			ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
+		if [[ "$MAX_BODY_SIZE" != "" ]]; then
+		echo "client_max_body_size "$MAX_BODY_SIZE";"
+		
+		else
+		
+		echo "client_max_body_size 0;"
+		fi 
+	
+	echo "rewrite_log on;"
+	
+	
+		if [[ "$REDIRECT_HTTP" != "" ]] ; then 
+			echo "return 301 $REDIRECT_HTTP;"
+		elif [[  "$HTTP_PORT" == "" ]]; then
+			echo "return 301 https://"$DOMAIN_NAME;
+	
+		else
+			echo "location / {"
 			
-			for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
-					AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
-					echo "     allow "$AN";"
-			done
-			echo "     deny  all;"
-	 	fi	
-
-		if [[ "$HTTP_PORT" != "" ]]; then
- 			echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+			if [[ "$ALLOWED_NETWORK" != "" ]]; then
+				ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
+				ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
+				
+				for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
+						AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
+						echo "     allow "$AN";"
+				done
+				echo "     deny  all;"
+		 	fi	
+	
+			if [[ "$HTTP_PORT" != "" ]]; then
+	 			echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+			fi
+	
+			echo " proxy_set_header Host "'$http_host'";
+	 proxy_set_header X-Real-IP "'$remote_addr'";
+	 proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
+	 proxy_set_header X-Forwarded-Proto "'$scheme'";
+	 proxy_set_header Upgrade "'$http_upgrade;'"
+	 proxy_cookie_path / /;
+	 proxy_set_header Connection "'$http_connection'" ;"
+	
+			if [[ "$DEBUG" != "true" ]]; then
+			 	echo " access_log off;"
+			fi
+			echo " proxy_redirect off;"
+			echo " proxy_buffering off;"
+			echo "}"
+				
+			if [[ "$ERROR_PAGE" != "" && "$HTTP_PORT" != "" ]]; then
+				echo "error_page 404 /$ERROR_PAGE;
+				location = /$ERROR_PAGE {
+				      root    html;
+				      allow   all;
+				      index   404.html;
+				      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
+					      }"
+			fi
 		fi
-
-		echo " proxy_set_header Host "'$http_host'";
- proxy_set_header X-Real-IP "'$remote_addr'";
- proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
- proxy_set_header X-Forwarded-Proto "'$scheme'";
- proxy_set_header Upgrade "'$http_upgrade;'"
- proxy_cookie_path / /;
- proxy_set_header Connection "'$http_connection'" ;"
-
-		if [[ "$DEBUG" != "true" ]]; then
-		 	echo " access_log off;"
-		fi
-		echo " proxy_redirect off;"
-		echo " proxy_buffering off;"
-		echo "}"
-			
-		if [[ "$ERROR_PAGE" != "" && "$HTTP_PORT" != "" ]]; then
-			echo "error_page 404 /$ERROR_PAGE;
-			location = /$ERROR_PAGE {
-			      root    html;
-			      allow   all;
-			      index   404.html;
-			      rewrite ^ "'$scheme'" http://$ERROR_PAGE"'$request_uri'" permanent;
-				      }"
-		fi
-	fi
-echo "}"
+	echo "}"
+fi
 
 if [[ "$HTTPS_PORT" != "" ]]; then
 	echo "server {
