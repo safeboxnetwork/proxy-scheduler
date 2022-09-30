@@ -48,7 +48,7 @@ return 301 https://$DOMAIN_NAME;
 
 fi	
 
-if [[ "$HTTP_PORT" != "" || "$HTTP_PORT" != "80" ]]; then
+if [[ "$HTTP_PORT" != "" && "$HTTP_PORT" != "80" ]]; then
 	echo "server {
 	listen $HTTP_PORT proxy_protocol;
 	set_real_ip_from 0.0.0.0/0;
