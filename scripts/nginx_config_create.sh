@@ -144,10 +144,21 @@ fi
 
 echo "rewrite_log on;
 proxy_ssl_server_name on; 
- ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;
- ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
- ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;
- ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;"
+
+if [ "$GENERATE_CERTIFICATE" == "true" ]; then 
+
+echo "ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
+ ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;"
+
+else 
+
+echo "ssl_certificate /etc/ssl/keys/fullchain.pem;
+ ssl_certificate_key /etc/ssl/keys/key.pem;"
+
+fi
+
+echo "ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
  ssl_prefer_server_ciphers on;
  ssl_ciphers "'"EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4 !kDHE"'";
 ssl_session_cache shared:SSL:50m;
