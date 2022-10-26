@@ -27,7 +27,7 @@ ALLOWED_NETWORK=$(jq -r '.ALLOWED_NETWORK | select(.!="null") | join(" ")' $DOMA
 ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
 # check whether certificates exist or not
 
-if [[ "$HTTPS_PORT" != "" && "$GENERATE_CERTIFICATE" == "true" ]]; then
+if [ "$HTTPS_PORT" != "" ]; then
 	/scripts/check_certificates.sh "$DOMAIN";
 fi
 

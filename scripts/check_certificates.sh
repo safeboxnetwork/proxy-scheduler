@@ -2,6 +2,7 @@
 
 # Set env variables
 	
+	GENERATE_CERTIFICATE=$GENERATE_CERTIFICATE
 	DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL
 	LETSENCRYPT_URL=$LETSENCRYPT_URL
 	LETSENCRYPT_SERVICE_NAME=$LETSENCRYPT_SERVICE_NAME
@@ -90,20 +91,22 @@ if [ ! -f "$DOMAIN_CERT_DIR/dhparam.pem" ]; then
 	openssl dhparam -dsaparam -out $DOMAIN_CERT_DIR/dhparam.pem 4096; 
 fi
 
-CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
+if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 
-if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
-	create_self_signed_certificate;
-else
-	file="$DOMAIN_CERT_DIR/letsencrypt"
-	{
-	echo "{ \"DOMAIN\": \"$DOMAIN\" }"
-	} >> "$file"
-	letsencrypt_certificates;
-	
-	if [[ ! -f /$DOMAIN_CERT_DIR/key.pem && ! -f /$DOMAIN_CERT_DIR/fullchain.pem && ! -f /$DOMAIN_CERT_DIR/cert.pem ]] ; then
+	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
+
+	if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
 		create_self_signed_certificate;
+	else
+		file="$DOMAIN_CERT_DIR/letsencrypt"
+		{
+		echo "{ \"DOMAIN\": \"$DOMAIN\" }"
+		} >> "$file"
+		letsencrypt_certificates;
+		
+		if [[ ! -f /$DOMAIN_CERT_DIR/key.pem && ! -f /$DOMAIN_CERT_DIR/fullchain.pem && ! -f /$DOMAIN_CERT_DIR/cert.pem ]] ; then
+			create_self_signed_certificate;
+		fi
 	fi
+
 fi
-
-

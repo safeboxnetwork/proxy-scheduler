@@ -8,6 +8,7 @@ REGISTRY_URL=$DOCKER_REGISTRY_URL
 
 # Set env variables
 DOMAIN="$1"
+DOMAIN_DIR=$DOMAIN_DIR
 PROXY_SERVICE_FILE=$PROXY_SERVICE_FILE
 ROLE=$ROLE
 SERVICE_NAME=$SERVICE_NAME
@@ -65,6 +66,8 @@ do_proxy_restart() {
 				else
 					echo "Reached retrying limit: "$RESTART" ,giving up, starting recocer previous state"
 					recover_process;
+
+
 				fi
 			done
 		fi
@@ -82,7 +85,15 @@ check_domain() {
 	fi
 }
 
-recover_process() { echo "Recovering previous state"
+recover_process() { 
+	echo "Recovering previous state";
+	rm $DOMAIN_DIR/$DOMAIN;
+
+	echo "#############################################################################"
+	echo "########    DOMAIN    #####    $DOMAIN   ####   DELETED      ################"
+	echo "#############################################################################"
+	exit;
+		
 }
 
 send_error_msg () { echo "Sending error messages"
