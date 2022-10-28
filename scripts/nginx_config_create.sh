@@ -41,8 +41,13 @@ file="/tmp/$DOMAIN.conf"
 
 if [[ "$HTTP_PORT" != "80" ]]; then
 	echo "server {
-listen 80 proxy_protocol;
-set_real_ip_from 0.0.0.0/0;
+listen 80 proxy_protocol;"
+	if [[ "$ALIASES_HTTP" != "" ]]; then
+		echo "server_name $DOMAIN_NAME $ALIASES_HTTP;"
+	else
+		echo "server_name $DOMAIN_NAME;"
+	fi 
+echo "set_real_ip_from 0.0.0.0/0;
 real_ip_header proxy_protocol;
 rewrite_log on;
 return 301 https://$DOMAIN_NAME;
