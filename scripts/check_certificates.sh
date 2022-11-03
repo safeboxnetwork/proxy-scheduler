@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Set env variables
-	
+
+	SERVICE_FILES=$SERVICE_FILES
 	GENERATE_CERTIFICATE=$GENERATE_CERTIFICATE
 	DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL
 	LETSENCRYPT_URL=$LETSENCRYPT_URL
@@ -22,10 +23,16 @@ else
 	DOCKER_REGISTRY_URL="";
 fi
 
+# Setting service files path
+
+if [ "$SERVICE_FILES" == "" ]; then
+	SERVICE_FILES=/etc/user/config/services
+fi
+
 service_exec="docker run --rm \
  -w /services/ \
- -v /etc/user/config/services/:/services/:ro \
- -v /etc/user/config/services/tmp/:/services/tmp/:rw \
+ -v $SERVICE_FILES/:/services/:ro \
+ -v $SERVICE_FILES/tmp/:/services/tmp/:rw \
  -v /var/run/docker.sock:/var/run/docker.sock \
  -v /usr/bin/docker:/usr/bin/docker:ro  \
  --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL $DOCKER_REGISTRY_URL$SETUP"
@@ -93,20 +100,38 @@ fi
 
 if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 
+	create_self_signed_certificate;
+	
 	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
 
 	if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
-		create_self_signed_certificate;
-	else
+		
 		file="$DOMAIN_CERT_DIR/letsencrypt"
 		{
 		echo "{ \"DOMAIN\": \"$DOMAIN\" }"
-		} >> "$file"
-		letsencrypt_certificates;
+		} >> "$file";
 		
-		if [[ ! -f /$DOMAIN_CERT_DIR/key.pem && ! -f /$DOMAIN_CERT_DIR/fullchain.pem && ! -f /$DOMAIN_CERT_DIR/cert.pem ]] ; then
-			create_self_signed_certificate;
-		fi
+		DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN";
+		if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
+			letsencrypt_certificates;
+		else
+			for retries in $(seq 0 $((RESTART + 1))); do
+				if [[ $retries -le $RESTART ]] ; then
+					sleep $TIMEOUT;
+					echo "Starting letsencrypt process";
+					if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
+						letsencrypt_certificates;
+					else
+						echo "Waiting "$TIMEOUT" second for starting proxies";
+						sleep $TIMEOUT;
+						echo "Not reached number of restart limit: "$RESTART" sleep "$TIMEOUT" and try again to start lets encrypt process." 
+					fi
+				else
+					echo "Reached retrying limit: "$RESTART" ,giving up to start lets encrypt process, try self sign the certificate";
+				fi
+
+			done
+		fi		
 	fi
 
 fi
