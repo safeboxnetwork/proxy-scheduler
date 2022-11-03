@@ -102,7 +102,7 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 	
 	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
 
-	if [[ "$(eval $CURL_CHECK)" != "200" ]] ; then
+	if [[ "$(eval $CURL_CHECK)" == "200" ]] ; then
 		
 		file="$DOMAIN_CERT_DIR/letsencrypt"
 		{
