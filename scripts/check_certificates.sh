@@ -52,7 +52,6 @@ letsencrypt_certificates() {
 	# In case of no running proxies found, try to start the service
 	if [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then 
 		echo "No running proxies found, create self signed cetificate";
-		create_self_signed_certificate;
 	fi;
 	
 	LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
@@ -72,7 +71,6 @@ letsencrypt_certificates() {
 			fi
 		else
 				echo "Reached retrying limit: "$RESTART" ,giving up to start lets encrypt process, try self sign the certificate";
-				create_self_signed_certificate; 
 		fi
 
 	done
@@ -114,17 +112,20 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 		DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN";
 		if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
 			letsencrypt_certificates;
+			echo "Starting letsencrypt"
 		else
+			echo "Not starting letsencrypt, waiting $TIMEOUT seconds"
 			for retries in $(seq 0 $((RESTART + 1))); do
 				if [[ $retries -le $RESTART ]] ; then
 					sleep $TIMEOUT;
 					echo "Starting letsencrypt process";
 					if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
 						letsencrypt_certificates;
+						break;
 					else
 						echo "Waiting "$TIMEOUT" second for starting proxies";
 						sleep $TIMEOUT;
-						echo "Not reached number of restart limit: "$RESTART" sleep "$TIMEOUT" and try again to start lets encrypt process." 
+						echo "Not reached number of restart limit: "$RESTART" sleep "$TIMEOUT" and try again to start lets encrypt process."
 					fi
 				else
 					echo "Reached retrying limit: "$RESTART" ,giving up to start lets encrypt process, try self sign the certificate";
