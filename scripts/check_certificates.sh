@@ -83,10 +83,11 @@ create_self_signed_certificate() {
 
 	if [[ ! -f $DOMAIN_CERT_DIR/key.pem && ! -f $DOMAIN_CERT_DIR/fullchain.pem && ! -f $DOMAIN_CERT_DIR/cert.pem ]] ; then
 
-# generate key
-openssl req -x509 -newkey rsa:4096 -keyout $DOMAIN_CERT_DIR/key.pem -out $DOMAIN_CERT_DIR/cert.pem -days 365 -sha256 -nodes -subj "/CN=$DOMAIN";
-cp -a $DOMAIN_CERT_DIR/cert.pem $DOMAIN_CERT_DIR/fullchain.pem;
-touch $DOMAIN_CERT_DIR/new_certificate;
+		# generate key
+		echo "No any certificates found, generate self signed";
+		openssl req -x509 -newkey rsa:4096 -keyout $DOMAIN_CERT_DIR/key.pem -out $DOMAIN_CERT_DIR/cert.pem -days 365 -sha256 -nodes -subj "/CN=$DOMAIN";
+		cp -a $DOMAIN_CERT_DIR/cert.pem $DOMAIN_CERT_DIR/fullchain.pem;
+		touch $DOMAIN_CERT_DIR/new_certificate;
 
 	fi
 
@@ -105,6 +106,7 @@ fi
 if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 
 	create_self_signed_certificate;
+	sleep 10;
 	
 	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
 
@@ -118,15 +120,16 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 		DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN";
 		if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
 			letsencrypt_certificates;
-			echo "Starting letsencrypt"
+			echo "Started letsencrypt for domain: $DOMAIN first time"
 		else
 			echo "Not starting letsencrypt, waiting $TIMEOUT seconds"
 			for retries in $(seq 0 $((RESTART + 1))); do
 				if [[ $retries -le $RESTART ]] ; then
 					sleep $TIMEOUT;
-					echo "Starting letsencrypt process";
+					echo "Starting letsencrypt process again";
 					if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
 						letsencrypt_certificates;
+						echo "Started letsencrypt for domain: $DOMAIN second time"
 						break;
 					else
 						echo "Waiting "$TIMEOUT" second for starting proxies";
