@@ -54,11 +54,10 @@ letsencrypt_certificates() {
 		echo "No running proxies found, create self signed cetificate";
 	fi;
 	
-	LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
-	
 	for retries in $(seq 0 $((RESTART + 1))); do
 		if [[ $retries -le $RESTART ]] ; then
 	
+			LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
 			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
 				echo "Starting letsencrypt process";
 				$service_exec $LETSENCRYPT_SERVICE_NAME start ;
