@@ -85,6 +85,7 @@ if [[ "$HTTP_PORT" != "" && "$HTTP_PORT" != "80" ]]; then
 	
 		else
 			echo "location / {"
+			echo "add_header 'Access-Control-Allow-Origin' '*' always;"
 			
 			if [[ "$ALLOWED_NETWORK" != "" ]]; then
 				ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
@@ -177,7 +178,7 @@ location = /$ERROR_PAGE {
       root    html;
       allow   all;
       index   404.html;
-      rewrite ^ "'$scheme'":http://$ERROR_PAGE"'$request_uri'" permanent;
+      rewrite ^ "'$scheme' "http://$ERROR_PAGE"'$request_uri'" permanent;
 	      }"
 	fi
 
@@ -185,6 +186,7 @@ location = /$ERROR_PAGE {
 		echo "return 301 $REDIRECT_HTTPS;"
 	else 
 		echo "location / {"
+		echo "add_header 'Access-Control-Allow-Origin' '*' always;"
 
 		if [[ "$ALLOWED_NETWORK" != "" ]]; then
 			ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
