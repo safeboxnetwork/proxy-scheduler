@@ -117,7 +117,7 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 		} >> "$file";
 		
 		DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN";
-		if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
+		if [[ "$(eval $DOMAIN_CHECK)" != "000" ]]; then
 			letsencrypt_certificates;
 			echo "Started letsencrypt for domain: $DOMAIN first time"
 		else
