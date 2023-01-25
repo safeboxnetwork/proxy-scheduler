@@ -35,6 +35,8 @@ service_exec="docker run --rm \
  -v $SERVICE_FILES/tmp/:/services/tmp/:rw \
  -v /var/run/docker.sock:/var/run/docker.sock \
  -v /usr/bin/docker:/usr/bin/docker:ro  \
+ --env TIMEOUT=$TIMEOUT \
+ --env RESTART=$RESTART \
  --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL $DOCKER_REGISTRY_URL$SETUP"
 
 letsencrypt_certificates() {
@@ -60,7 +62,7 @@ letsencrypt_certificates() {
 			LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
 			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
 				echo "Starting letsencrypt process";
-				$service_exec $LETSENCRYPT_SERVICE_NAME start ;
+				$service_exec $LETSENCRYPT_SERVICE_NAME start info;
 				break;
 			else
 				echo "Waiting "$TIMEOUT" second for previous letsencrypt process ending";
@@ -117,7 +119,7 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 		} >> "$file";
 		
 		DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN";
-		if [[ "$(eval $DOMAIN_CHECK)" != "000" ]]; then
+		if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]] ; then
 			letsencrypt_certificates;
 			echo "Started letsencrypt for domain: $DOMAIN first time"
 		else

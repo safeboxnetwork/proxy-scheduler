@@ -157,9 +157,14 @@ echo "ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
  ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;"
 
 else 
-
-echo "ssl_certificate /etc/ssl/keys/fullchain.pem;
- ssl_certificate_key /etc/ssl/keys/key.pem;"
+	if []; then
+		
+		echo "ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
+		 ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;"
+	else 
+		echo "ssl_certificate /etc/ssl/keys/fullchain.pem;
+		 ssl_certificate_key /etc/ssl/keys/key.pem;"
+	fi
 
 fi
 
@@ -239,7 +244,7 @@ echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
 					ALP_LOCAL_PORT=$HTTP_PORT
 				fi;
 
-				echo "location $ALP_LOCAL_PATH {"
+				echo "location /$ALP_LOCAL_PATH {"
 
 				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
 
@@ -260,7 +265,7 @@ echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
  proxy_set_header X-Forwarded-Proto "'$scheme'";
  proxy_set_header Upgrade "'$http_upgrade;'"
- proxy_cookie_path $ALP_LOCAL_PATH $ALP_LOCAL_PATH;
+ proxy_cookie_path /$ALP_LOCAL_PATH /$ALP_LOCAL_PATH;
  proxy_set_header Connection "'$http_connection'";
  proxy_connect_timeout      300;
  proxy_send_timeout         300;
