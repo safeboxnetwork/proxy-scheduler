@@ -76,7 +76,7 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
       	then
       		echo "backend $(jq -r .DOMAIN $i)_http";
 		echo "	mode http";
-		echo "	server $(jq -r .DOMAIN $i) $(jq -r .LOCAL_IP $i):$(jq -r .HTTP_PORT $i) send-proxy";
+		echo "	server $(jq -r .DOMAIN $i) $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy";
 	fi
 done
 
@@ -123,7 +123,7 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
       		echo "backend $(jq -r .DOMAIN $i)_https";
 		echo "	option ssl-hello-chk";
 		echo "	mode tcp";
-		echo "	server $(jq -r .DOMAIN $i) $(jq -r .LOCAL_IP $i):$(jq -r .HTTPS_PORT $i) check send-proxy";
+		echo "	server $(jq -r .DOMAIN $i) $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy";
 	fi
 done
 

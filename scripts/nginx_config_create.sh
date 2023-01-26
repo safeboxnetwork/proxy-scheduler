@@ -15,7 +15,7 @@ DOMAIN_SOURCE=/domains/$DOMAIN
 DOMAIN_NAME=$(jq -r .DOMAIN $DOMAIN_SOURCE)
 HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
 HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE)
-LOCAL_IP=$(jq -r .LOCAL_IP $DOMAIN_SOURCE)
+LOCAL_NAME=$(jq -r .LOCAL_NAME $DOMAIN_SOURCE)
 ALIASES_HTTP=$(jq -r '.ALIASES_HTTP | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 ALIASES_HTTPS=$(jq -r '.ALIASES_HTTPS | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
@@ -98,7 +98,7 @@ if [[ "$HTTP_PORT" != "" && "$HTTP_PORT" != "80" ]]; then
 		 	fi	
 	
 			if [[ "$HTTP_PORT" != "" ]]; then
-	 			echo " proxy_pass http://$LOCAL_IP:$HTTP_PORT;"
+	 			echo " proxy_pass http://$LOCAL_NAME:$HTTP_PORT;"
 			fi
 	
 			echo " proxy_set_header Host "'$http_host'";
@@ -201,7 +201,7 @@ location = /$ERROR_PAGE {
 			done
 			echo "     deny  all;"
 	 	fi	
-echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
+echo " proxy_pass http://$LOCAL_NAME:$HTTPS_PORT;"
  
 		echo " proxy_set_header Host "'$http_host'";
  proxy_set_header X-Real-IP "'$remote_addr'";
@@ -232,12 +232,12 @@ echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
 				ALP=$(jq -r .ALTERNATE_LOCATION_PATH[$i] $DOMAIN_SOURCE)
 
 				ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
-				ALP_LOCAL_IP=$(echo $ALP | jq -rc .LOCAL_IP);
+				ALP_LOCAL_NAME=$(echo $ALP | jq -rc .LOCAL_NAME);
 				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
 				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc '.LOCAL_ALLOWED_NETWORK | select(.!="null") | join(" ")');
 
-				if [[ "$ALP_LOCAL_IP" = "" ]]; then
-					ALP_LOCAL_IP=$LOCAL_IP
+				if [[ "$ALP_LOCAL_NAME" = "" ]]; then
+					ALP_LOCAL_NAME=$LOCAL_NAME
 				fi;
 
 				if [[ "$ALP_LOCAL_PORT" = "" ]]; then
@@ -255,9 +255,9 @@ echo " proxy_pass http://$LOCAL_IP:$HTTPS_PORT;"
 				fi
 
 				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
-					echo " proxy_pass http://$ALP_LOCAL_IP:$ALP_LOCAL_PORT;"
+					echo " proxy_pass http://$ALP_LOCAL_NAME:$ALP_LOCAL_PORT;"
 				else
-					echo " proxy_pass http://$ALP_LOCAL_IP:80;"
+					echo " proxy_pass http://$ALP_LOCAL_NAME:80;"
 				fi
  
 				echo " proxy_set_header Host "'$http_host'";

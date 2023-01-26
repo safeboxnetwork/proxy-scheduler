@@ -35,7 +35,7 @@ do
  
  elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" || "${op}" == "MOVED_TO" ]]; then
 
-	DOMAIN=$(echo $file);
+	DOMAIN=$(echo $file | jq .DOMAIN);
 
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config created, changed";                                           
@@ -55,7 +55,7 @@ elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]
 	fi;
 
 elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
-		DOMAIN=$(echo $file);
+		DOMAIN=$(echo $file | jq .DOMAIN);
 		echo "domain deleted";
 		
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
