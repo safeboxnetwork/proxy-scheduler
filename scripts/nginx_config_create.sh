@@ -12,6 +12,7 @@ if [ -n "$2" ]; then
 fi
 
 DOMAIN_SOURCE=/domains/$DOMAIN
+#DOMAIN_SOURCE=./domains/$DOMAIN
 DOMAIN_NAME=$(jq -r .DOMAIN $DOMAIN_SOURCE)
 HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
 HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE)
@@ -25,6 +26,71 @@ MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
 DEBUG=$(jq -r .DEBUG $DOMAIN_SOURCE)
 ALLOWED_NETWORK=$(jq -r '.ALLOWED_NETWORK | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
+
+add_alternate_location() {
+
+		if [[ "$ALTERNATE_LOCATION_PATH" != "" ]]; then
+
+			ALP_IDX=$(jq -r '.ALTERNATE_LOCATION_PATH | length' $DOMAIN_SOURCE)
+			ALP_IDX=$(( $ALP_IDX - 1 ))
+
+			for i in $(seq 0 $ALP_IDX) ;
+			do
+				ALP=$(jq -r .ALTERNATE_LOCATION_PATH[$i] $DOMAIN_SOURCE)
+
+				ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
+				ALP_LOCAL_NAME=$(echo $ALP | jq -rc .LOCAL_NAME);
+				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
+				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc '.LOCAL_ALLOWED_NETWORK | select(.!="null") | join(" ")');
+
+				if [[ "$ALP_LOCAL_NAME" = "" ]]; then
+					ALP_LOCAL_NAME=$LOCAL_NAME
+				fi;
+
+				if [[ "$ALP_LOCAL_PORT" = "" ]]; then
+					ALP_LOCAL_PORT=$HTTP_PORT
+				fi;
+
+				echo "location /$ALP_LOCAL_PATH {"
+
+				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
+
+				for i in $(echo $ALP_LOCAL_ALLOWED_NETWORK) ; do
+						echo "     allow "$i";"
+				done
+						echo "     deny  all;"
+				fi
+
+				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
+					echo " proxy_pass http://$ALP_LOCAL_NAME:$ALP_LOCAL_PORT;"
+				else
+					echo " proxy_pass http://$ALP_LOCAL_NAME:80;"
+				fi
+ 
+				echo " proxy_set_header Host "'$http_host'";
+ proxy_set_header X-Real-IP "'$remote_addr'";
+ proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
+ proxy_set_header X-Forwarded-Proto "'$scheme'";
+ proxy_set_header Upgrade "'$http_upgrade;'"
+ proxy_cookie_path /$ALP_LOCAL_PATH /$ALP_LOCAL_PATH;
+ proxy_set_header Connection "'$http_connection'";
+ proxy_connect_timeout      300;
+ proxy_send_timeout         300;
+ proxy_read_timeout         300;
+ proxy_next_upstream off;"
+
+				if [[ "$DEBUG" != "true" ]]; then
+					echo " access_log off;"
+				fi
+				echo " proxy_redirect off;"
+				echo " proxy_buffering off;"
+				echo "}"
+			done;
+		fi;
+
+}
+
+
 # check whether certificates exist or not
 
 if [ "$HTTPS_PORT" != "" ]; then
@@ -37,6 +103,19 @@ file="/tmp/$DOMAIN.conf"
 
 #cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
 
+# if domain already exists as a config file append alternate location there
+if [ -f $DOMAIN_NAME.conf ]; then
+	
+	{
+		cat $DOMAIN_NAME.conf | head -n -1
+		add_alternate_location;
+		echo "}"
+
+	} >> "$file"
+
+else
+
+# create new nginx config
 {
 
 if [[ "$HTTP_PORT" != "80" ]]; then
@@ -157,14 +236,8 @@ echo "ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
  ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;"
 
 else 
-	if []; then
-		
-		echo "ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
-		 ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;"
-	else 
-		echo "ssl_certificate /etc/ssl/keys/fullchain.pem;
-		 ssl_certificate_key /etc/ssl/keys/key.pem;"
-	fi
+	echo "ssl_certificate /etc/ssl/keys/fullchain.pem;
+ ssl_certificate_key /etc/ssl/keys/key.pem;"
 
 fi
 
@@ -222,64 +295,8 @@ echo " proxy_pass http://$LOCAL_NAME:$HTTPS_PORT;"
 		echo " proxy_buffering off;"
 		echo "}"
 
-		if [[ "$ALTERNATE_LOCATION_PATH" != "" ]]; then
 
-			ALP_IDX=$(jq -r '.ALTERNATE_LOCATION_PATH | length' $DOMAIN_SOURCE)
-			ALP_IDX=$(( $ALP_IDX - 1 ))
-
-			for i in $(seq 0 $ALP_IDX) ;
-			do
-				ALP=$(jq -r .ALTERNATE_LOCATION_PATH[$i] $DOMAIN_SOURCE)
-
-				ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
-				ALP_LOCAL_NAME=$(echo $ALP | jq -rc .LOCAL_NAME);
-				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
-				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc '.LOCAL_ALLOWED_NETWORK | select(.!="null") | join(" ")');
-
-				if [[ "$ALP_LOCAL_NAME" = "" ]]; then
-					ALP_LOCAL_NAME=$LOCAL_NAME
-				fi;
-
-				if [[ "$ALP_LOCAL_PORT" = "" ]]; then
-					ALP_LOCAL_PORT=$HTTP_PORT
-				fi;
-
-				echo "location /$ALP_LOCAL_PATH {"
-
-				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
-
-				for i in $(echo $ALP_LOCAL_ALLOWED_NETWORK) ; do
-						echo "     allow "$i";"
-				done
-						echo "     deny  all;"
-				fi
-
-				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
-					echo " proxy_pass http://$ALP_LOCAL_NAME:$ALP_LOCAL_PORT;"
-				else
-					echo " proxy_pass http://$ALP_LOCAL_NAME:80;"
-				fi
- 
-				echo " proxy_set_header Host "'$http_host'";
- proxy_set_header X-Real-IP "'$remote_addr'";
- proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
- proxy_set_header X-Forwarded-Proto "'$scheme'";
- proxy_set_header Upgrade "'$http_upgrade;'"
- proxy_cookie_path /$ALP_LOCAL_PATH /$ALP_LOCAL_PATH;
- proxy_set_header Connection "'$http_connection'";
- proxy_connect_timeout      300;
- proxy_send_timeout         300;
- proxy_read_timeout         300;
- proxy_next_upstream off;"
-
-				if [[ "$DEBUG" != "true" ]]; then
-					echo " access_log off;"
-				fi
-				echo " proxy_redirect off;"
-				echo " proxy_buffering off;"
-				echo "}"
-			done;
-		fi;
+		add_alternate_location;
 
 	fi
 
@@ -289,5 +306,8 @@ fi
 
 } >> "$file"
 
-mv /tmp/$DOMAIN.conf $DOMAIN.conf;
+fi; # end of create new nginx config
+
+mv $file $DOMAIN_NAME.conf;
 echo "$DOMAIN" >> new_config
+
