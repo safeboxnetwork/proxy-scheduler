@@ -83,7 +83,7 @@ add_location() {
 				fi
 
 				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
-					echo " proxy_pass http://$ALP_LOCAL_NAME:$ALP_LOCAL_PORT;"
+					echo " proxy_pass http://$ALP_LOCAL_NAME:$ALP_LOCAL_PORT/;"
 				else
 					echo " proxy_pass http://$ALP_LOCAL_NAME:80;"
 				fi
