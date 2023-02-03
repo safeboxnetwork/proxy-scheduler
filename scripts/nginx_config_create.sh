@@ -4,19 +4,12 @@ GENERATE_CERTIFICATE=$GENERATE_CERTIFICATE
 
 cd /proxy_config
 
-DOMAIN=$1
-if [ -n "$2" ]; then
-	echo "$DOMAIN DELETED";
-	rm $DOMAIN.conf;
-	exit;
-fi
+FILENAME=$1
 
-DOMAIN_SOURCE=/domains/$DOMAIN
-#DOMAIN_SOURCE=./domains/$DOMAIN
+DOMAIN_SOURCE=/domains/$FILENAME
 DOMAIN_NAME=$(jq -r .DOMAIN $DOMAIN_SOURCE)
 HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
-HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE)
-LOCAL_NAME=$(jq -r .LOCAL_NAME $DOMAIN_SOURCE)
+HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE);
 ALIASES_HTTP=$(jq -r '.ALIASES_HTTP | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 ALIASES_HTTPS=$(jq -r '.ALIASES_HTTPS | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 REDIRECT_HTTP=$(jq -r .REDIRECT_HTTP $DOMAIN_SOURCE)
@@ -26,6 +19,16 @@ MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
 DEBUG=$(jq -r .DEBUG $DOMAIN_SOURCE)
 ALLOWED_NETWORK=$(jq -r '.ALLOWED_NETWORK | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
 ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
+LOCAL_NAME=$(jq -r .LOCAL_NAME $DOMAIN_SOURCE 2>/dev/null);
+if [[ "$LOCAL_NAME" == "" || "$LOCAL_NAME" == "null" ]]; then
+        LOCAL_NAME=$(jq -r .LOCAL_IP $DOMAIN_SOURCE 2>/dev/null);
+fi
+
+if [ -n "$2" ]; then
+	echo "$DOMAIN_NAME DELETED";
+	rm $DOMAIN_NAME.conf;
+	exit;
+fi
 
 add_alternate_location() {
 
@@ -51,7 +54,7 @@ add_alternate_location() {
 					ALP_LOCAL_PORT=$HTTP_PORT
 				fi;
 
-				echo "location /$ALP_LOCAL_PATH {"
+				echo "location $ALP_LOCAL_PATH {"
 
 				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
 
@@ -72,7 +75,7 @@ add_alternate_location() {
  proxy_set_header X-Forwarded-For "'$proxy_add_x_forwarded_for'";
  proxy_set_header X-Forwarded-Proto "'$scheme'";
  proxy_set_header Upgrade "'$http_upgrade;'"
- proxy_cookie_path /$ALP_LOCAL_PATH /$ALP_LOCAL_PATH;
+ proxy_cookie_path $ALP_LOCAL_PATH $ALP_LOCAL_PATH;
  proxy_set_header Connection "'$http_connection'";
  proxy_connect_timeout      300;
  proxy_send_timeout         300;
@@ -93,26 +96,21 @@ add_alternate_location() {
 
 # check whether certificates exist or not
 
-if [ "$HTTPS_PORT" != "" ]; then
-	/scripts/check_certificates.sh "$DOMAIN";
-fi
 
-echo "created domain name: "$DOMAIN;
+echo "created domain name: "$DOMAIN_NAME;
 
-file="/tmp/$DOMAIN.conf"
+file="/tmp/$DOMAIN_NAME.conf"
 
-#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
+#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN_NAME.conf
 
 # if domain already exists as a config file append alternate location there
-if [ -f $DOMAIN_NAME.conf ]; then
-	
+if [ -f $DOMAIN_NAME.conf ] && [[ "$LOCAL_NAME" == "" || "$LOCAL_NAME" == "null" ]]; then
 	{
 		cat $DOMAIN_NAME.conf | head -n -1
 		add_alternate_location;
 		echo "}"
 
 	} >> "$file"
-
 else
 
 # create new nginx config
@@ -228,12 +226,12 @@ fi
 
 echo "rewrite_log on;
 proxy_ssl_server_name on; 
- ssl_dhparam /etc/ssl/keys/$DOMAIN/dhparam.pem;"
+ ssl_dhparam /etc/ssl/keys/$DOMAIN_NAME/dhparam.pem;"
 
 if [ "$GENERATE_CERTIFICATE" == "true" ]; then 
 
-echo "ssl_certificate /etc/ssl/keys/$DOMAIN/fullchain.pem;
- ssl_certificate_key /etc/ssl/keys/$DOMAIN/key.pem;"
+echo "ssl_certificate /etc/ssl/keys/$DOMAIN_NAME/fullchain.pem;
+ ssl_certificate_key /etc/ssl/keys/$DOMAIN_NAME/key.pem;"
 
 else 
 	echo "ssl_certificate /etc/ssl/keys/fullchain.pem;
@@ -309,5 +307,8 @@ fi
 fi; # end of create new nginx config
 
 mv $file $DOMAIN_NAME.conf;
-echo "$DOMAIN" >> new_config
+echo "$DOMAIN_NAME" >> new_config
 
+if [ "$HTTPS_PORT" != "" ]; then
+	/scripts/check_certificates.sh "$DOMAIN_NAME";
+fi

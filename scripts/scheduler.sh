@@ -22,6 +22,8 @@ while read dir op file
 
 do 
 
+ echo "DEBUG: $dir $file $op";
+
  parent="/"$(echo $dir|cut -d / -f2)
 
  if [[ "${parent}" == "${CERT_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]] ; then
@@ -33,16 +35,17 @@ do
 			/scripts/check_proxy_state.sh $DOMAIN;
 		fi
  
- elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" || "${op}" == "MOVED_TO" ]]; then
-
-	DOMAIN=$(echo $file | jq .DOMAIN);
+ elif [ "${parent}" == "${DOMAIN_DIR}" ] && [[ "${op}" == "CLOSE_WRITE,CLOSE" || "${op}" == "MOVED_TO" ]]; then
 
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
-		echo "haproxy config created, changed";                                           
-		/scripts/config_haproxy_create.sh $DOMAIN; 
+		DOMAIN=$(cat $DOMAIN_DIR"/"$file | jq -r .DOMAIN);
+		if [ "$DOMAIN" == "$file" ]; then
+			echo "haproxy config created, changed";                                           
+			/scripts/config_haproxy_create.sh $file; 
+		fi;
 	else                                                                                      
-		echo "domain config created, changed";                                            
-		/scripts/nginx_config_create.sh "$DOMAIN";                                                
+		echo "domain config created, changed";
+		/scripts/nginx_config_create.sh "$file";
 	fi	
 
 elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]]; then
@@ -55,16 +58,16 @@ elif [[ "${parent}" == "${PROXY_CONFIG_DIR}" && "${op}" == "CLOSE_WRITE,CLOSE" ]
 	fi;
 
 elif [[ "${parent}" == "${DOMAIN_DIR}" && "${op}" == "DELETE" ]] ; then
-		DOMAIN=$(echo $file | jq .DOMAIN);
-		echo "domain deleted";
+
+	echo "domain file: $file deleted";
 		
 	if [[ "${PROXY_TYPE}" == "haproxy" ]]; then                                               
 		echo "haproxy config deleted";                                           
-		/scripts/config_haproxy_create.sh;                                                
-                                                                                                                                                        
-	elif [ ! -f "$DOMAIN_DIR/$DOMAIN" ]; then
-			/scripts/nginx_config_create.sh "$DOMAIN" "DEL";
-			/scripts/check_proxy_state.sh "$DOMAIN" "DEL";
+		/scripts/config_haproxy_create.sh;
+
+	elif [ ! -f "$DOMAIN_DIR/$file" ]; then
+		/scripts/nginx_config_create.sh "$file" "DEL";
+		/scripts/check_proxy_state.sh "$file" "DEL";
  	fi
 fi
 

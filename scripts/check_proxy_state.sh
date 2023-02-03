@@ -7,8 +7,14 @@ RESTART_COUNTER=0
 REGISTRY_URL=$DOCKER_REGISTRY_URL
 
 # Set env variables
-DOMAIN="$1"
+FILENAME="$1"
 DOMAIN_DIR=$DOMAIN_DIR
+if [ -f $DOMAIN_DIR"/"$FILENAME ]; then
+	DOMAIN=$(jq -r .DOMAIN $DOMAIN_DIR"/"$FILENAME)
+else
+	# in case of CERT_DIR
+	DOMAIN=$FILENAME
+fi;
 PROXY_SERVICE_FILE=$PROXY_SERVICE_FILE
 ROLE=$ROLE
 SERVICE_NAME=$SERVICE_NAME
@@ -23,8 +29,49 @@ else
 	SETUP="setup";
 	DOCKER_REGISTRY_URL="";
 fi
+# SPECIAL MOUNTS CHEKING
+
+DNS_DIR=$DNS_DIR
+if [ "$DNS_DIR" == "" ] ; then
+        DNS_DIR="/etc/system/data/dns";
+else
+        DNS="--env DNS_DIR=$DNS_DIR";
+        DNS_PATH="--volume $DNS_DIR:/etc/dns:rw";
+fi
+
+USER_INIT_PATH=$USER_INIT_PATH
+
+if [ "$USER_INIT_PATH" == "" ]; then
+        USER_INIT_PATH=/etc/user/config;
+else
+        USER_ENV="--env $USER_INIT_PATH=/etc/user/config";
+        USER_PATH="--volume $USER_INIT_PATH:/etc/user/config:ro";
+fi
+
+# Setting service files path
+
+SERVICE_FILES=$SERVICE_FILES
+
+if [ "$SERVICE_FILES" == "" ]; then
+        SERVICE_FILES=/etc/user/config/services
+fi
+
+CA_PATH=$CA_PATH
+if [ "$CA_PATH" == "" ]; then
+        CA_PATH=/etc/ssl/certs;
+else
+        CA="--env CA_PATH=$CA_PATH";
+        CA_FILE="--volume $CA_PATH:$CA_PATH:ro";
+fi
+
 
 service_exec="docker run --rm \
+ $DNS $DNS_PATH \
+ $CA $CA_FILE \
+ $USER_ENV $USER_PATH \
+ -w /services/ \
+ -v $SERVICE_FILES/:/services/:ro \
+ -v $SERVICE_FILES/tmp/:/services/tmp/:rw \
  -w /services/ \
  -v /etc/user/config/services/:/services/:ro \
  -v /etc/user/config/services/tmp/:/services/tmp/:rw \
@@ -65,8 +112,6 @@ do_proxy_restart() {
 				else
 					echo "Reached retrying limit: "$RESTART" ,giving up, starting recocer previous state"
 					recover_process;
-
-
 				fi
 			done
 		fi
@@ -86,7 +131,7 @@ check_domain() {
 
 recover_process() { 
 	echo "Recovering previous state";
-	rm $DOMAIN_DIR/$DOMAIN;
+	rm $DOMAIN_DIR/$FILENAME;
 
 	echo "#############################################################################"
 	echo "########    DOMAIN    #####    $DOMAIN   ####   DELETED      ################"
