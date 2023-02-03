@@ -7,6 +7,7 @@ cd /proxy_config
 FILENAME=$1
 
 DOMAIN_SOURCE=/domains/$FILENAME
+#DOMAIN_SOURCE=./domains/$FILENAME #TEMP
 DOMAIN_NAME=$(jq -r .DOMAIN $DOMAIN_SOURCE)
 HTTP_PORT=$(jq -r .HTTP_PORT $DOMAIN_SOURCE)
 HTTPS_PORT=$(jq -r .HTTPS_PORT $DOMAIN_SOURCE);
@@ -18,6 +19,7 @@ ERROR_PAGE=$(jq -r .ERROR_PAGE $DOMAIN_SOURCE)
 MAX_BODY_SIZE=$(jq -r .MAX_BODY_SIZE $DOMAIN_SOURCE)
 DEBUG=$(jq -r .DEBUG $DOMAIN_SOURCE)
 ALLOWED_NETWORK=$(jq -r '.ALLOWED_NETWORK | select(.!="null") | join(" ")' $DOMAIN_SOURCE)
+OPERATION=$(jq -r '.OPERATION' $DOMAIN_SOURCE)
 ALTERNATE_LOCATION_PATH=$(jq -r .ALTERNATE_LOCATION_PATH $DOMAIN_SOURCE)
 LOCAL_NAME=$(jq -r .LOCAL_NAME $DOMAIN_SOURCE 2>/dev/null);
 if [[ "$LOCAL_NAME" == "" || "$LOCAL_NAME" == "null" ]]; then
@@ -31,6 +33,15 @@ if [ -n "$2" ]; then
 fi
 
 add_alternate_location() {
+	{
+		cat $DOMAIN_NAME.conf | head -n -1
+		add_location;
+		echo "}"
+
+	} >> "$file"
+}
+
+add_location() {
 
 		if [[ "$ALTERNATE_LOCATION_PATH" != "" ]]; then
 
@@ -45,6 +56,13 @@ add_alternate_location() {
 				ALP_LOCAL_NAME=$(echo $ALP | jq -rc .LOCAL_NAME);
 				ALP_LOCAL_PORT=$(echo $ALP | jq -rc .LOCAL_PORT);
 				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc '.LOCAL_ALLOWED_NETWORK | select(.!="null") | join(" ")');
+
+				# do not duplicate locations
+				EXISTS=$(grep -rn "location /$ALP_LOCAL_PATH {" -m 1 $DOMAIN_NAME.conf);
+				if [ -n "$EXISTS" ]; then
+					# skip if exists
+					continue;
+				fi;
 
 				if [[ "$ALP_LOCAL_NAME" = "" ]]; then
 					ALP_LOCAL_NAME=$LOCAL_NAME
@@ -88,29 +106,67 @@ add_alternate_location() {
 				echo " proxy_redirect off;"
 				echo " proxy_buffering off;"
 				echo "}"
+				echo "# location end"
 			done;
 		fi;
 
 }
 
+remove_alternate_location() {
+
+	if [[ "$ALTERNATE_LOCATION_PATH" != "" ]]; then
+
+		ALP_IDX=$(jq -r '.ALTERNATE_LOCATION_PATH | length' $DOMAIN_SOURCE)
+		ALP_IDX=$(( $ALP_IDX - 1 ))
+
+		for i in $(seq 0 $ALP_IDX) ;
+		do
+			ALP=$(jq -r .ALTERNATE_LOCATION_PATH[$i] $DOMAIN_SOURCE)
+			ALP_LOCAL_PATH=$(echo $ALP | jq -rc .LOCAL_PATH);
+			remove_location $ALP_LOCAL_PATH
+		done;
+	fi;
+}
+
+remove_location() {
+	local LOCATION=$1
+
+	LOCATION_ROW="location /$LOCATION {";
+	ROW_NUMBER=$(grep -rn "$LOCATION_ROW" $DOMAIN_NAME.conf | cut -d ':' -f1);
+	OFFSET=$(tail -n+$ROW_NUMBER $DOMAIN_NAME.conf | grep -n '# location end' -m 1 | cut -d ':' -f1);
+	START=$(($ROW_NUMBER - 1));
+	END=$(($ROW_NUMBER + $OFFSET));
+
+	{
+		head -n$START $DOMAIN_NAME.conf
+		tail -n+$END $DOMAIN_NAME.conf
+	} >> $file
+
+	mv $file $DOMAIN_NAME.conf;
+}
+
+
+file="/tmp/$DOMAIN.conf"
 
 # check whether certificates exist or not
 
 
 echo "created domain name: "$DOMAIN_NAME;
 
-file="/tmp/$DOMAIN_NAME.conf"
-
-#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN_NAME.conf
+#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
 
 # if domain already exists as a config file append alternate location there
-if [ -f $DOMAIN_NAME.conf ] && [[ "$LOCAL_NAME" == "" || "$LOCAL_NAME" == "null" ]]; then
-	{
-		cat $DOMAIN_NAME.conf | head -n -1
-		add_alternate_location;
-		echo "}"
+if [ -f $DOMAIN_NAME.conf ]; then
 
-	} >> "$file"
+	if [ "$OPERATION" = "DELETE" ]; then
+		remove_alternate_location;
+	elif [ "$OPERATION" = "MODIFY" ]; then
+		remove_alternate_location;
+		add_alternate_location;
+	else
+		# default CREATE, append location
+		add_alternate_location;
+	fi;
 else
 
 # create new nginx config
@@ -293,8 +349,7 @@ echo " proxy_pass http://$LOCAL_NAME:$HTTPS_PORT;"
 		echo " proxy_buffering off;"
 		echo "}"
 
-
-		add_alternate_location;
+		add_location;
 
 	fi
 
@@ -306,8 +361,10 @@ fi
 
 fi; # end of create new nginx config
 
-mv $file $DOMAIN_NAME.conf;
-echo "$DOMAIN_NAME" >> new_config
+if [ "$OPERATION" != "DELETE" ]; then
+	mv $file $DOMAIN_NAME.conf;
+fi;
+echo "$DOMAIN" >> new_config
 
 if [ "$HTTPS_PORT" != "" ]; then
 	/scripts/check_certificates.sh "$DOMAIN_NAME";
