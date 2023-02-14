@@ -58,7 +58,7 @@ add_location() {
 				ALP_LOCAL_ALLOWED_NETWORK=$(echo $ALP | jq -rc '.LOCAL_ALLOWED_NETWORK | select(.!="null") | join(" ")');
 
 				# do not duplicate locations
-				EXISTS=$(grep -rn "location /$ALP_LOCAL_PATH {" -m 1 $DOMAIN_NAME.conf);
+				EXISTS=$(grep -rn "location $ALP_LOCAL_PATH {" -m 1 $DOMAIN_NAME.conf);
 				if [ -n "$EXISTS" ]; then
 					# skip if exists
 					continue;
