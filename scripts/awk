@@ -1,0 +1,1 @@
+awk '/-----BEGIN CERTIFICATE-----/ {show=1} /-----END CERTIFICATE-----/ {show=1} show {print}' keys/$ovpn.crt >> result

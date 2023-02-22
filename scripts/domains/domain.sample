@@ -1,0 +1,13 @@
+{
+"DEBUG": "true",
+"DOMAIN": "domain.example",
+"ALIASES_HTTP": [ ],
+"ALIASES_HTTPS": [ ],
+"LOCAL_NAME": "domain-app",
+"HTTP_PORT": "",
+"HTTPS_PORT": "80",
+"ERROR_PAGE": "",
+"REDIRECT_HTTP": "",
+"REDIRECT_HTTPS": "",
+"MAX_BODY_SIZE": ""
+}
