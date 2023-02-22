@@ -25,6 +25,7 @@ LOCAL_NAME=$(jq -r .LOCAL_NAME $DOMAIN_SOURCE 2>/dev/null);
 if [[ "$LOCAL_NAME" == "" || "$LOCAL_NAME" == "null" ]]; then
         LOCAL_NAME=$(jq -r .LOCAL_IP $DOMAIN_SOURCE 2>/dev/null);
 fi
+RELOAD_LOCATIONS="";
 
 if [ -n "$2" ]; then
 	echo "$DOMAIN_NAME DELETED";
@@ -60,6 +61,14 @@ add_location() {
 				# do not duplicate locations
 				EXISTS=$(grep -rn "location $ALP_LOCAL_PATH {" -m 1 $DOMAIN_NAME.conf);
 				if [ -n "$EXISTS" ]; then
+					ROW_NUMBER=$(echo $EXISTS | cut -d ':' -f1);
+					START=$(($ROW_NUMBER + 2));
+					OFFSET=$(tail -n+$START $DOMAIN_NAME.conf | grep -n '}' -m 1 | cut -d ':' -f1);
+					OFFSET=$(($OFFSET - 2));
+					ALP_ALLOWED=$(echo $(tail -n+$START $DOMAIN_NAME.conf | head -n $OFFSET | awk '{print $2}')); # echo removes space at the end
+					if [ "$ALP_LOCAL_ALLOWED_NETWORK" != "$ALP_ALLOWED" ]; then
+						RELOAD_LOCATIONS=$RELOAD_LOCATIONS$ALP_LOCAL_PATH" "
+					fi;
 					# skip if exists
 					continue;
 				fi;
@@ -75,11 +84,12 @@ add_location() {
 				echo "location $ALP_LOCAL_PATH {"
 
 				if [[ "$ALP_LOCAL_ALLOWED_NETWORK" != "" ]]; then
-
-				for i in $(echo $ALP_LOCAL_ALLOWED_NETWORK) ; do
-						echo "     allow "$i";"
-				done
-						echo "     deny  all;"
+					echo " limit_except GET HEAD {";
+					for i in $(echo $ALP_LOCAL_ALLOWED_NETWORK) ; do
+						echo " 	allow $i";
+					done;
+					echo " 	deny all;";
+					echo " }";
 				fi
 
 				if [[ "$ALP_LOCAL_PORT" != "" ]]; then
@@ -131,22 +141,24 @@ remove_alternate_location() {
 remove_location() {
 	local LOCATION=$1
 
-	LOCATION_ROW="location /$LOCATION {";
+	LOCATION_ROW="location $LOCATION {";
 	ROW_NUMBER=$(grep -rn "$LOCATION_ROW" $DOMAIN_NAME.conf | cut -d ':' -f1);
-	OFFSET=$(tail -n+$ROW_NUMBER $DOMAIN_NAME.conf | grep -n '# location end' -m 1 | cut -d ':' -f1);
-	START=$(($ROW_NUMBER - 1));
-	END=$(($ROW_NUMBER + $OFFSET));
+	if [ -n "$ROW_NUMBER" ]; then
+		OFFSET=$(tail -n+$ROW_NUMBER $DOMAIN_NAME.conf | grep -n '# location end' -m 1 | cut -d ':' -f1);
+		START=$(($ROW_NUMBER - 1));
+		END=$(($ROW_NUMBER + $OFFSET));
 
-	{
-		head -n$START $DOMAIN_NAME.conf
-		tail -n+$END $DOMAIN_NAME.conf
-	} >> $file
+		{
+			head -n$START $DOMAIN_NAME.conf
+			tail -n+$END $DOMAIN_NAME.conf
+		} >> $file
 
-	mv $file $DOMAIN_NAME.conf;
+		mv $file $DOMAIN_NAME.conf;
+	fi;
 }
 
 
-file="/tmp/$DOMAIN.conf"
+file="/tmp/$DOMAIN_NAME.conf"
 
 # check whether certificates exist or not
 
@@ -166,6 +178,13 @@ if [ -f $DOMAIN_NAME.conf ]; then
 	else
 		# default CREATE, append location
 		add_alternate_location;
+
+		# reload alternate locations if allowed networks has changed
+		if [ -n "$RELOAD_LOCATIONS" ]; then
+			rm $file;
+			remove_alternate_location;
+			add_alternate_location;
+		fi;
 	fi;
 else
 
@@ -223,12 +242,14 @@ if [[ "$HTTP_PORT" != "" && "$HTTP_PORT" != "80" ]]; then
 				ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
 				ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
 				
+				echo " limit_except GET HEAD {";
 				for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
-						AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
-						echo "     allow "$AN";"
+					AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
+					echo " 	allow "$AN";"
 				done
-				echo "     deny  all;"
-		 	fi	
+				echo " 	deny  all;"
+				echo " }";
+		 	fi
 	
 			if [[ "$HTTP_PORT" != "" ]]; then
 	 			echo " proxy_pass http://$LOCAL_NAME:$HTTP_PORT;"
@@ -322,11 +343,13 @@ location = /$ERROR_PAGE {
 			ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
 			ALLOWED_NETWORK_IDX=$(( $ALLOWED_NETWORK_IDX - 1 ))
 			
+			echo " limit_except GET HEAD {";
 			for i in $(seq 0 $ALLOWED_NETWORK_IDX) ; do
 					AN=$(jq -r .ALLOWED_NETWORK[$i] $DOMAIN_SOURCE)
-					echo "     allow "$AN";"
+					echo " 	allow "$AN";"
 			done
-			echo "     deny  all;"
+			echo " 	deny  all;"
+			echo " }";
 	 	fi	
 echo " proxy_pass http://$LOCAL_NAME:$HTTPS_PORT;"
  
