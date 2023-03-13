@@ -88,7 +88,7 @@ do_proxy_restart() {
 	for PROXY_NAME in $NAMES ; do 
 		
 		DO_RESTART="true";
-		if [ "$FORCE_RESTART" == "true" ]; then
+		if [ "$FORCE_RESTART" != "true" ]; then
 			docker stop $PROXY_NAME;
 			docker start $PROXY_NAME;
 			sleep $TIMEOUT;
