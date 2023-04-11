@@ -105,10 +105,10 @@ do_proxy_restart() {
 					echo "Proxy "$PROXY_NAME" restarting in progress";
 					$service_exec $SERVICE_NAME.containers.$PROXY_NAME stop force;
 					
-					# finding network name for starting affected network
-					NETWORK_NAME=$(jq -r --arg NAME $PROXY_NAME '.containers[] | select(.NAME==$NAME)' $PROXY_SERVICE_FILE | jq -r .NETWORK)
+					## finding network name for starting affected network
+					#NETWORK_NAME=$(jq -r --arg NAME $PROXY_NAME '.containers[] | select(.NAME==$NAME)' $PROXY_SERVICE_FILE | jq -r .NETWORK)
+					#$service_exec $SERVICE_NAME.networks.$NETWORK_NAME start
 					
-					$service_exec $SERVICE_NAME.networks.$NETWORK_NAME start
 					$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
 					sleep $TIMEOUT;
 					if docker ps | grep $PROXY_NAME ; then
