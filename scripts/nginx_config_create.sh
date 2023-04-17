@@ -157,38 +157,8 @@ remove_location() {
 	fi;
 }
 
-
-file="/tmp/$DOMAIN_NAME.conf"
-
-# check whether certificates exist or not
-
-
-echo "created domain name: "$DOMAIN_NAME;
-
-#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
-
-# if domain already exists as a config file append alternate location there
-if [ -f $DOMAIN_NAME.conf ]; then
-
-	if [ "$OPERATION" = "DELETE" ]; then
-		remove_alternate_location;
-	elif [ "$OPERATION" = "MODIFY" ]; then
-		remove_alternate_location;
-		add_alternate_location;
-	else
-		# default CREATE, append location
-		add_alternate_location;
-
-		# reload alternate locations if allowed networks has changed
-		if [ -n "$RELOAD_LOCATIONS" ]; then
-			rm $file;
-			remove_alternate_location;
-			add_alternate_location;
-		fi;
-	fi;
-else
-
 # create new nginx config
+create_new_config() {
 {
 
 if [[ "$HTTP_PORT" != "80" ]]; then
@@ -372,15 +342,67 @@ echo " proxy_pass http://$LOCAL_NAME:$HTTPS_PORT;"
 		echo " proxy_buffering off;"
 		echo "}"
 
+		echo "# first location end";
+
 		add_location;
 
 	fi
 
-echo "}"
+if [ "$OPERATION" != "MODIFY" ]; then
+	echo "}"
+fi;
 
 fi
 
 } >> "$file"
+
+}
+
+
+file="/tmp/$DOMAIN_NAME.conf"
+
+# check whether certificates exist or not
+
+
+echo "created domain name: "$DOMAIN_NAME;
+
+#cp -a /scripts/nginx_template.conf /tmp/$DOMAIN.conf
+
+# if domain already exists as a config file append alternate location there
+if [ -f $DOMAIN_NAME.conf ]; then
+
+	if [ "$OPERATION" = "DELETE" ]; then
+		remove_alternate_location;
+	elif [ "$OPERATION" = "MODIFY" ]; then
+		# must be before create_new_config
+		remove_alternate_location;
+		add_alternate_location;
+		mv $file $DOMAIN_NAME.conf;
+
+		# regenerates nginx config into $file
+		create_new_config;
+
+		#  append existing alternate locations to new config file
+		OFFSET=$(cat $DOMAIN_NAME.conf | grep -n '# first location end' -m 1 | cut -d ':' -f1);
+		OFFSET=$(($OFFSET + 1));
+		{
+			tail -n+$OFFSET $DOMAIN_NAME.conf
+		} >> $file
+
+	else
+		# default CREATE, append location
+		add_alternate_location;
+
+		# reload alternate locations if allowed networks has changed
+		if [ -n "$RELOAD_LOCATIONS" ]; then
+			rm $file;
+			remove_alternate_location;
+			add_alternate_location;
+		fi;
+	fi;
+else
+
+	create_new_config;
 
 fi; # end of create new nginx config
 
