@@ -402,6 +402,8 @@ if [ -f $DOMAIN_NAME.conf ]; then
 	fi;
 else
 
+	# rewrite operation if nginx config file doesn't exists
+	OPERATION="CREATE";
 	create_new_config;
 
 fi; # end of create new nginx config
