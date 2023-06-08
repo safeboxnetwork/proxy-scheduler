@@ -54,6 +54,8 @@ letsencrypt_certificates() {
 	# In case of no running proxies found, try to start the service
 	if [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then 
 		echo "No running proxies found, create self signed cetificate";
+		create_self_signed_certificate;
+		exit;
 	fi;
 	
 	for retries in $(seq 0 $((RESTART + 1))); do
@@ -80,7 +82,7 @@ letsencrypt_certificates() {
 
 create_self_signed_certificate() { 
 
-# Check any certificate exxits
+# Check any certificate exists
 
 	if [[ ! -f $DOMAIN_CERT_DIR/key.pem && ! -f $DOMAIN_CERT_DIR/fullchain.pem && ! -f $DOMAIN_CERT_DIR/cert.pem ]] ; then
 
@@ -101,13 +103,12 @@ fi
 
 if [ ! -f "$DOMAIN_CERT_DIR/dhparam.pem" ]; then
 	# generate dhparam file
-	openssl dhparam -dsaparam -out $DOMAIN_CERT_DIR/dhparam.pem 4096; 
+	openssl dhparam -dsaparam -out $DOMAIN_CERT_DIR/dhparam.pem 4096;
+	create_self_signed_certificate;
+	exit; 
 fi
 
 if [ "$GENERATE_CERTIFICATE" == "true" ]; then
-
-	create_self_signed_certificate;
-	sleep 10;
 	
 	CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL";
 
