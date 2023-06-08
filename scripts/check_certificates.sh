@@ -79,9 +79,9 @@ create_self_signed_certificate() {
 		PROXY_NAMES="";
 		# Check services with running containers by roles
 		for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' /$PROXY_SERVICE_FILE | jq -r .NAME) ; do
-			UP=$(docker ps | grep $CONTAINER | grep Up | wc -l)
+			RUNNING_CONTAINER=$(docker ps | grep $CONTAINER | grep Up)
 			PROXY_NAMES=$PROXY_NAMES" "$CONTAINER;
-			RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
+			RUNNING_CONTAINERS=$RUNNING_CONTAINERS" "$RUNNING_CONTAINER;
 		done;
 	
 		# In case of no running proxies found, try to start the service
