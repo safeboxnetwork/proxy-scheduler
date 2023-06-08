@@ -41,23 +41,8 @@ service_exec="docker run --rm \
 
 letsencrypt_certificates() {
 
-	local RUNNING_CONTAINERS;
+	#cd /
 
-	cd /
-
-	# Check services with running containers by roles
-	for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' /$PROXY_SERVICE_FILE | jq -r .NAME) ; do
-		UP=$(docker ps | grep $CONTAINER | grep Up | wc -l)
-		RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
-	done;
-
-	# In case of no running proxies found, try to start the service
-	if [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then 
-		echo "No running proxies found, create self signed cetificate";
-		create_self_signed_certificate;
-		exit;
-	fi;
-	
 	for retries in $(seq 0 $((RESTART + 1))); do
 		if [[ $retries -le $RESTART ]] ; then
 	
@@ -90,7 +75,28 @@ create_self_signed_certificate() {
 		echo "No any certificates found, generate self signed";
 		openssl req -x509 -newkey rsa:4096 -keyout $DOMAIN_CERT_DIR/key.pem -out $DOMAIN_CERT_DIR/cert.pem -days 365 -sha256 -nodes -subj "/CN=$DOMAIN";
 		cp -a $DOMAIN_CERT_DIR/cert.pem $DOMAIN_CERT_DIR/fullchain.pem;
-		touch $DOMAIN_CERT_DIR/new_certificate;
+	
+		PROXY_NAMES="";
+		# Check services with running containers by roles
+		for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' /$PROXY_SERVICE_FILE | jq -r .NAME) ; do
+			UP=$(docker ps | grep $CONTAINER | grep Up | wc -l)
+			PROXY_NAMES=$PROXY_NAMES" "$CONTAINER;
+			RUNNING_CONTAINERS=$((RUNNING_CONTAINERS + UP))
+		done;
+	
+		# In case of no running proxies found, try to start the service
+		
+		for NAME in $(echo $PROXY_NAMES); do
+			echo "Starting $NAME";
+			docker start $NAME;
+			docker ps |grep $NAME;
+		done;
+		
+		for NAME in $(echo $RUNNING_CONTAINERS); do
+			echo "Restarting $NAME";
+			docker restart $NAME;
+			docker ps |grep $NAME;
+		done;
 
 	fi
 
@@ -105,7 +111,8 @@ if [ ! -f "$DOMAIN_CERT_DIR/dhparam.pem" ]; then
 	# generate dhparam file
 	openssl dhparam -dsaparam -out $DOMAIN_CERT_DIR/dhparam.pem 4096;
 	create_self_signed_certificate;
-	exit; 
+
+	
 fi
 
 if [ "$GENERATE_CERTIFICATE" == "true" ]; then
