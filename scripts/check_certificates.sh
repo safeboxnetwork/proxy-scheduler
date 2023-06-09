@@ -76,27 +76,6 @@ create_self_signed_certificate() {
 		openssl req -x509 -newkey rsa:4096 -keyout $DOMAIN_CERT_DIR/key.pem -out $DOMAIN_CERT_DIR/cert.pem -days 365 -sha256 -nodes -subj "/CN=$DOMAIN";
 		cp -a $DOMAIN_CERT_DIR/cert.pem $DOMAIN_CERT_DIR/fullchain.pem;
 	
-		PROXY_NAMES="";
-		# Check services with running containers by roles
-		for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' /$PROXY_SERVICE_FILE | jq -r .NAME) ; do
-			RUNNING_CONTAINER=$(docker ps | grep $CONTAINER | grep Up)
-			PROXY_NAMES=$PROXY_NAMES" "$CONTAINER;
-			RUNNING_CONTAINERS=$RUNNING_CONTAINERS" "$RUNNING_CONTAINER;
-		done;
-	
-		# In case of no running proxies found, try to start the service
-		
-		for NAME in $(echo $PROXY_NAMES); do
-			echo "Starting $NAME";
-			docker start $NAME;
-			docker ps |grep $NAME;
-		done;
-		
-		for NAME in $(echo $RUNNING_CONTAINERS); do
-			echo "Restarting $NAME";
-			docker restart $NAME;
-			docker ps |grep $NAME;
-		done;
 
 	fi
 
@@ -111,7 +90,24 @@ if [ ! -f "$DOMAIN_CERT_DIR/dhparam.pem" ]; then
 	# generate dhparam file
 	openssl dhparam -dsaparam -out $DOMAIN_CERT_DIR/dhparam.pem 4096;
 	create_self_signed_certificate;
+		
+	PROXY_NAMES="";
+	# Check services with running containers by roles
+	for CONTAINER in $(jq -r --arg ROLE $ROLE '.containers[] | select(.ROLES==$ROLE)' /$PROXY_SERVICE_FILE | jq -r .NAME) ; do
+		PROXY_NAMES=$PROXY_NAMES" "$CONTAINER;
+	done;
 
+	for NAME in $(echo $PROXY_NAMES); do
+		RUNNING_CONTAINER=$(docker ps | grep $NAME | grep Up);
+		if [ "$RUNNING_CONTAINER" != "" ]; then
+			echo "Restarting $NAME";
+			docker restart $NAME;
+		else
+			echo "Starting $NAME";
+			docker start $NAME;
+		fi;
+		docker ps |grep $NAME;
+	done;
 	
 fi
 
