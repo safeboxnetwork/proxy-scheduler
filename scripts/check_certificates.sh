@@ -29,15 +29,42 @@ if [ "$SERVICE_FILES" == "" ]; then
 	SERVICE_FILES=/etc/user/config/services
 fi
 
+if [ "$SOURCE" == "" ]; then
+	SOURCE=/etc/user/config
+fi
+
+if [[ -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
+    SETUP="/setup";
+else
+    SETUP="setup";
+    DOCKER_REGISTRY_URL="";
+fi
+
+    DNS_DIR="/etc/system/data/dns";
+    DNS="--env DNS_DIR=$DNS_DIR";
+    DNS_PATH="--volume $DNS_DIR:/etc/dns:rw";
+
+    CA_PATH=/etc/ssl/certs;
+    CA="--env CA_PATH=$CA_PATH";
+    CA_FILE="--volume $CA_PATH:$CA_PATH:ro";
+
+
 service_exec="docker run --rm \
- -w /services/ \
- -v $SERVICE_FILES/:/services/:ro \
- -v $SERVICE_FILES/tmp/:/services/tmp/:rw \
- -v /var/run/docker.sock:/var/run/docker.sock \
- -v /usr/bin/docker:/usr/bin/docker:ro  \
- --env TIMEOUT=$TIMEOUT \
- --env RESTART=$RESTART \
- --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL $DOCKER_REGISTRY_URL$SETUP"
+$DNS $DNS_PATH \
+$CA $CA_FILE \
+-w /services/ \
+-v $SOURCE/system.json:/etc/user/config/system.json:ro \
+-v $SOURCE/user.json:/etc/user/config/user.json:ro \
+-v $SERVICE_FILES/:/services/:ro \
+-v $SERVICE_FILES/tmp/:/services/tmp/:rw \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v /usr/bin/docker:/usr/bin/docker:ro  \
+--env DOMAIN=$DOMAIN \
+--env TIMEOUT=$TIMEOUT \
+--env RESTART=$RESTART \
+--env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
+$DOCKER_REGISTRY_URL$SETUP"
+
 
 letsencrypt_certificates() {
 
