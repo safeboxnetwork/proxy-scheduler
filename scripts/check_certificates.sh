@@ -76,7 +76,15 @@ letsencrypt_certificates() {
 			LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
 			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
 				echo "Starting letsencrypt process";
-				$service_exec $LETSENCRYPT_SERVICE_NAME start info;
+				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp $SERVICE_FILES/tmp/);
+				ENVS='[
+					{ "DOMAIN": "'$DOMAIN'" },
+					{ "TIMEOUT": "'$TIMEOUT'" },
+					{ "RESTART": "'$RESTART'" }
+				]';
+				jq '.containers[0].ENVS |='$ENVS'' $LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE
+
+				$service_exec $LETSENCRYPT_TEMP_SERVICE_FILE start info;
 				break;
 			else
 				echo "Waiting "$TIMEOUT" second for previous letsencrypt process ending";
