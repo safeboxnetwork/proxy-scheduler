@@ -77,11 +77,11 @@ letsencrypt_certificates() {
 				echo "Starting letsencrypt process";
 				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/);
 				ENVS='[
-					{ "DOMAIN": "'$DOMAIN'" },
-					{ "TIMEOUT": "'$TIMEOUT'" },
-					{ "RESTART": "'$RESTART'" }
+					{"DOMAIN": "'$DOMAIN'"},
+					{"TIMEOUT": "'$TIMEOUT'"},
+					{"RESTART": "'$RESTART'"}
 				]';
-				jq '.containers[0].ENVS |='$ENVS'' $LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE
+				jq '.containers[0].ENVS |='"$ENVS" $LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE
 
 				$service_exec $(basename $LETSENCRYPT_TEMP_SERVICE_FILE) start info;
 				break;
