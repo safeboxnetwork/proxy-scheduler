@@ -81,7 +81,7 @@ letsencrypt_certificates() {
 					{"TIMEOUT": "'$TIMEOUT'"},
 					{"RESTART": "'$RESTART'"}
 				]';
-				jq '.containers[0].ENVS |='"$ENVS" $LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE
+				jq '.containers[0].ENVS |='"$ENVS" $SERVICE_FILES/$LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE
 
 				$service_exec $(basename $LETSENCRYPT_TEMP_SERVICE_FILE) start info;
 				break;
