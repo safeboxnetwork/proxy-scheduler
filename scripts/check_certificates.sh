@@ -72,7 +72,8 @@ letsencrypt_certificates() {
 			LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
 			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
 				echo "Starting letsencrypt process";
-				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/);
+				cp -av /firewall-files/firewall-letsencrypt.json /tmp/;
+				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/)".json";
 				ENVS='[
 					{"DOMAIN": "'$DOMAIN'"},
 					{"TIMEOUT": "'$TIMEOUT'"},
@@ -86,7 +87,8 @@ letsencrypt_certificates() {
 					}
 				';
 				jq '.containers[0].ENVS |='"$ENVS"' | .containers[0].VOLUMES[.containers[0].VOLUMES|length]|='"$VOLUMES" $SERVICE_FILES/$LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE;
-				$service_exec $(basename $LETSENCRYPT_TEMP_SERVICE_FILE) start info;
+				$service_exec $(basename ${LETSENCRYPT_TEMP_SERVICE_FILE%.*}) start info;
+				rm -v /tmp/firewall-letsencrypt.json ;
 				break;
 			else
 				echo "Waiting "$TIMEOUT" second for previous letsencrypt process ending";
