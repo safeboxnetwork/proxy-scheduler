@@ -55,7 +55,7 @@ $CA $CA_FILE \
 -w /services/ \
 -v $SOURCE/system.json:/etc/user/config/system.json:ro \
 -v $SOURCE/user.json:/etc/user/config/user.json:ro \
--v $SERVICE_FILES/:/services/tmp/:rw \
+-v $SERVICE_FILES/tmp/:/services/:rw \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v /usr/bin/docker:/usr/bin/docker:ro  \
 --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
@@ -72,7 +72,7 @@ letsencrypt_certificates() {
 			LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
 			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
 				echo "Starting letsencrypt process";
-				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/)".json";
+				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/);
 				ENVS='[
 					{"DOMAIN": "'$DOMAIN'"},
 					{"TIMEOUT": "'$TIMEOUT'"},
