@@ -55,12 +55,9 @@ $CA $CA_FILE \
 -w /services/ \
 -v $SOURCE/system.json:/etc/user/config/system.json:ro \
 -v $SOURCE/user.json:/etc/user/config/user.json:ro \
--v $SERVICE_FILES/tmp/:/services/:ro \
+-v $SERVICE_FILES/:/services/tmp/:rw \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v /usr/bin/docker:/usr/bin/docker:ro  \
---env DOMAIN=$DOMAIN \
---env TIMEOUT=$TIMEOUT \
---env RESTART=$RESTART \
 --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
 $DOCKER_REGISTRY_URL$SETUP"
 
@@ -75,14 +72,20 @@ letsencrypt_certificates() {
 			LETS_ENCRYPT_VALUE="$(docker ps | grep letsencrypt | grep Up | wc -l)";
 			if [[ $LETS_ENCRYPT_VALUE -eq 0 ]] ; then
 				echo "Starting letsencrypt process";
-				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/);
+				LETSENCRYPT_TEMP_SERVICE_FILE=$(mktemp -p /tmp/)".json";
 				ENVS='[
 					{"DOMAIN": "'$DOMAIN'"},
 					{"TIMEOUT": "'$TIMEOUT'"},
 					{"RESTART": "'$RESTART'"}
 				]';
-				jq '.containers[0].ENVS |='"$ENVS" $SERVICE_FILES/$LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE
-
+				VOLUMES='
+					{
+						"SOURCE": "/etc/user/config/user.json",
+						"DEST": "/etc/user/config/user.json",
+						"TYPE": "ro"
+					}
+				';
+				jq '.containers[0].ENVS |='"$ENVS"' | .containers[0].VOLUMES[.containers[0].VOLUMES|length]|='"$VOLUMES" $SERVICE_FILES/$LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE;
 				$service_exec $(basename $LETSENCRYPT_TEMP_SERVICE_FILE) start info;
 				break;
 			else
