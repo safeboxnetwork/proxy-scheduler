@@ -93,7 +93,7 @@ do_proxy_restart() {
 			docker start $PROXY_NAME;
 			sleep $TIMEOUT;
 			
-			if docker ps | grep $PROXY_NAME ; then
+			if docker ps | grep $PROXY_NAME | grep Up ; then
 				echo "$PROXY_NAME restarted successful";
 				DO_RESTART="false";
 			fi
@@ -111,7 +111,7 @@ do_proxy_restart() {
 					
 					$service_exec $SERVICE_NAME.containers.$PROXY_NAME start
 					sleep $TIMEOUT;
-					if docker ps | grep $PROXY_NAME ; then
+					if docker ps | grep $PROXY_NAME | grep Up ; then
 						echo "$PROXY_NAME restarted successful";
 						break ;
 					else	
@@ -185,7 +185,7 @@ elif [[ "$RUNNING_CONTAINERS" -eq 0 ]] ; then
 	
 	for proxies in $CONTAINERS ; do 
 
-		if docker ps | grep $proxies ; then
+		if docker ps | grep $proxies | grep Up; then
 			echo "$proxies started successful";
 		else 
 			echo "$proxies starting was unsuccesful";
@@ -203,7 +203,7 @@ elif [[ "$RUNNING_CONTAINERS" -eq 1 ]] ; then
 			
 			do_proxy_restart $proxies;
 			
-			if docker ps | grep $proxies ; then
+			if docker ps | grep $proxies | grep Up ; then
 				echo "$proxies started successful";
 			else 
 				echo "$proxies starting was unsuccesful";
@@ -218,7 +218,7 @@ elif [[ "$RUNNING_CONTAINERS" -eq 1 ]] ; then
 	# At last need to restart the only one running proxy when the others started successful.
 	for CHECK_PROXIES in $CONTAINERS ; do
 		if [[ $CHECK_PROXIES != $ONLY_RUNNING_PROXY_NAME ]] ; then
-			if docker ps | grep $CHECK_PROXIES ; then
+			if docker ps | grep $CHECK_PROXIES | grep Up ; then
 				echo "Not running proxies successfuly started, let's start the only running one.";
 				do_proxy_restart $ONLY_RUNNING_PROXY_NAME;
 			else
