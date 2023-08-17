@@ -17,7 +17,7 @@ mkdir -p $CERT_DIR
 
 unset IFS
 
-inotifywait --exclude .sw -m -e CREATE,CLOSE_WRITE,DELETE,MOVED_TO -r $DOMAIN_DIR $CERT_DIR $PROXY_CONFIG_DIR | \
+inotifywait --exclude \.(swp|tmp) -m -e CREATE,CLOSE_WRITE,DELETE,MOVED_TO -r $DOMAIN_DIR $CERT_DIR $PROXY_CONFIG_DIR | \
 while read dir op file
 
 do 
