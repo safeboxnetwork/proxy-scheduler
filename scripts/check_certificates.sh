@@ -55,7 +55,8 @@ $CA $CA_FILE \
 -w /services/ \
 -v $SOURCE/system.json:/etc/user/config/system.json:ro \
 -v $SOURCE/user.json:/etc/user/config/user.json:ro \
--v $SERVICE_FILES/tmp/:/services/:rw \
+-v $SERVICE_FILES:/services:ro \
+-v $SERVICE_FILES/tmp:/services/tmp:rw \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v /usr/bin/docker:/usr/bin/docker:ro  \
 --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
