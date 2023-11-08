@@ -87,7 +87,7 @@ letsencrypt_certificates() {
 					}
 				';
 				jq '.containers[0].ENVS |='"$ENVS"' | .containers[0].VOLUMES[.containers[0].VOLUMES|length]|='"$VOLUMES" $SERVICE_FILES/$LETSENCRYPT_SERVICE_NAME > $LETSENCRYPT_TEMP_SERVICE_FILE;
-				$service_exec $(basename ${LETSENCRYPT_TEMP_SERVICE_FILE%.*}).json start info;
+				$service_exec $(basename ${LETSENCRYPT_TEMP_SERVICE_FILE%.*}) start info prechecked;
 				rm -v /tmp/firewall-letsencrypt.json ;
 				break;
 			else
