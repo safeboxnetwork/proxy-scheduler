@@ -18,7 +18,7 @@
                                 },
                                 {
                                 "SOURCE": "/etc/user/config/services/tmp",
-                                "DEST": "/tmp",
+                                "DEST": "/etc/user/config/services/tmp",
                                 "TYPE": "rw"
                                 },
                                 {
