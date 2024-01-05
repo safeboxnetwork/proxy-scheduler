@@ -42,8 +42,13 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
+		INDIVIDUAL_DOMAIN_FLAG=$(jq -r .INDIVIDUAL_DOMAIN $i 2>/dev/null );
 		DOMAIN_NAME=$(jq -r .DOMAIN $i);
-		echo "acl "$DOMAIN_NAME"_http hdr(host) -m reg -i ^[^\.]+\."$DOMAIN_NAME"$";
+		if [ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ];
+			echo "acl "$DOMAIN_NAME"_http hdr(host) -i "$DOMAIN_NAME"";
+		else
+			echo "acl "$DOMAIN_NAME"_http hdr(host) -m reg -i ^[^\.]+\."$DOMAIN_NAME"$";
+		fi
 	fi
 
 	if [[ "$(jq -r .DOMAIN $i)" != "letsencrypt"  && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .ALIASES_HTTP[] $i)" != "" ]]
@@ -93,8 +98,13 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
+		INDIVIDUAL_DOMAIN_FLAG=$(jq -r .INDIVIDUAL_DOMAIN $i 2>/dev/null );
 		DOMAIN_NAME=$(jq -r .DOMAIN $i);
-		echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i -m reg ^[^\.]+\."$DOMAIN_NAME"$";
+		if [ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ];
+			echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i "$DOMAIN_NAME"";
+		else
+			echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i -m reg ^[^\.]+\."$DOMAIN_NAME"$";
+		fi
 	fi
 	if [[ "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .ALIASES_HTTPS[] $i)" != "" ]]
 	then
