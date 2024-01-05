@@ -42,7 +42,8 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
-		echo "acl $(jq -r .DOMAIN $i)_http hdr(host) -i $(jq -r .DOMAIN $i)";
+		DOMAIN_NAME=$(jq -r .DOMAIN $i);
+		echo "acl "$DOMAIN_NAME"_http hdr(host) -m reg -i ^[^\.]+\."$DOMAIN_NAME"$";
 	fi
 
 	if [[ "$(jq -r .DOMAIN $i)" != "letsencrypt"  && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .ALIASES_HTTP[] $i)" != "" ]]
@@ -92,7 +93,8 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 
 	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
 	then
-		echo "acl $(jq -r .DOMAIN $i)_https req_ssl_sni -i $(jq -r .DOMAIN $i)";
+		DOMAIN_NAME=$(jq -r .DOMAIN $i);
+		echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i -m reg ^[^\.]+\."$DOMAIN_NAME"$";
 	fi
 	if [[ "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .ALIASES_HTTPS[] $i)" != "" ]]
 	then
