@@ -44,7 +44,7 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 	then
 		INDIVIDUAL_DOMAIN_FLAG=$(jq -r .INDIVIDUAL_DOMAIN $i 2>/dev/null );
 		DOMAIN_NAME=$(jq -r .DOMAIN $i);
-		if [[ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ]];
+		if [[ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ]]; then
 			echo "acl "$DOMAIN_NAME"_http hdr(host) -i "$DOMAIN_NAME"";
 		else
 			echo "acl "$DOMAIN_NAME"_http hdr(host) -m reg -i ^[^\.]+\."$DOMAIN_NAME"$";
@@ -100,7 +100,7 @@ for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
 	then
 		INDIVIDUAL_DOMAIN_FLAG=$(jq -r .INDIVIDUAL_DOMAIN $i 2>/dev/null );
 		DOMAIN_NAME=$(jq -r .DOMAIN $i);
-		if [[ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ]];
+		if [[ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ]]; then
 			echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i "$DOMAIN_NAME"";
 		else
 			echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i -m reg ^[^\.]+\."$DOMAIN_NAME"$";
