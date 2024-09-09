@@ -76,7 +76,6 @@ service_exec="docker run --rm \
  -v /etc/user/config/services/:/services/:ro \
  -v /etc/user/config/services/tmp/:/services/tmp/:rw \
  -v /var/run/docker.sock:/var/run/docker.sock \
- -v /usr/bin/docker:/usr/bin/docker:ro  \
  --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
  $DOCKER_REGISTRY_URL$SETUP"
 
