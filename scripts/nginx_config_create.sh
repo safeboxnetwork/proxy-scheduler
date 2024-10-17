@@ -4,7 +4,7 @@ GENERATE_CERTIFICATE=$GENERATE_CERTIFICATE
 
 cd /proxy_config
 
-FILENAME=$1
+FILENAME="$1";
 
 DOMAIN_SOURCE=/domains/$FILENAME
 #DOMAIN_SOURCE=./domains/$FILENAME #TEMP
@@ -160,6 +160,8 @@ remove_location() {
 # create new nginx config
 create_new_config() {
 {
+
+REGENERATE="$1"
 
 if [[ "$HTTP_PORT" != "80" ]]; then
 	echo "server {
@@ -348,16 +350,29 @@ echo " proxy_pass http://$LOCAL_NAME:$HTTPS_PORT;"
 
 	fi
 
-if [ "$OPERATION" != "MODIFY" ]; then
+if [ "$REGENERATE" == "" ]; then
 	echo "}"
 fi;
 
 fi
 
 } >> "$file"
-
 }
 
+regenerate_config() {
+
+	mv $file $DOMAIN_NAME.conf;
+
+	# regenerates nginx config into $file
+	create_new_config "regenerate";
+
+	#  append existing alternate locations to new config file
+	OFFSET=$(cat $DOMAIN_NAME.conf | grep -n '# first location end' -m 1 | cut -d ':' -f1);
+	OFFSET=$(($OFFSET + 1));
+	{
+		tail -n+$OFFSET $DOMAIN_NAME.conf
+	} >> $file
+}
 
 file="/tmp/$DOMAIN_NAME.conf"
 
@@ -377,21 +392,14 @@ if [ -f $DOMAIN_NAME.conf ]; then
 		# must be before create_new_config
 		remove_alternate_location;
 		add_alternate_location;
-		mv $file $DOMAIN_NAME.conf;
 
-		# regenerates nginx config into $file
-		create_new_config;
-
-		#  append existing alternate locations to new config file
-		OFFSET=$(cat $DOMAIN_NAME.conf | grep -n '# first location end' -m 1 | cut -d ':' -f1);
-		OFFSET=$(($OFFSET + 1));
-		{
-			tail -n+$OFFSET $DOMAIN_NAME.conf
-		} >> $file
+		regenerate_config;
 
 	else
 		# default CREATE, append location
 		add_alternate_location;
+
+		regenerate_config;
 
 		# reload alternate locations if allowed networks has changed
 		if [ -n "$RELOAD_LOCATIONS" ]; then
