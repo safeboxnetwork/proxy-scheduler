@@ -25,12 +25,7 @@
                                 "SOURCE": "/etc/system/data/dns/hosts.local", 
                                 "DEST": "/etc/dns/hosts.local",
                                 "TYPE": "ro"
-                                },
-				{
-                                 "SOURCE": "/var/run/docker.sock",
-                                 "DEST": "/var/run/docker.sock",
-                                 "TYPE": "rw"
-                                 }
+                                }
 				],
 			"PORTS": [ ],
 			"READYNESS": [

@@ -21,7 +21,7 @@
 			"NETWORK": "letsencrypt",
 			"VOLUMES": [
 				{
-				"SOURCE": "/etc/ssl/keys/",
+				"SOURCE": "/etc/system/ssl/keys/",
 				"DEST": "/acme.sh/",
 				"TYPE": "rw"
 				},

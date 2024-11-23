@@ -14,11 +14,6 @@
                                 {
                                 "SOURCE": "/etc/user/config/services",
                                 "DEST": "/etc/user/config/services",
-                                "TYPE": "ro"
-                                },
-                                {
-                                "SOURCE": "/etc/user/config/services/tmp",
-                                "DEST": "/etc/user/config/services/tmp",
                                 "TYPE": "rw"
                                 },
                                 {
