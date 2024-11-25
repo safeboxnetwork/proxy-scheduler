@@ -92,7 +92,7 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]; then
             if [ "$WILDCARD" != "" ]; then
                 HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
-                echo "backend $HOST."$TLD"_http
+                echo "backend $HOST."$TLD"_http"
                 echo " mode http"
                 echo " server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
             else
@@ -105,8 +105,9 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
 
     echo
 
-    echo "frontend https
-                "
+    echo "frontend https"
+
+    echo
 
     cat "$global_https"
     echo
@@ -160,7 +161,7 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
             WILDCARD=$(echo $DOMAIN_NAME | grep '*')
             if [ "$WILDCARD" != "" ]; then
                 HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
-                echo "backend $HOST."$TLD"_https
+                echo "backend $HOST."$TLD"_https"
                 echo "	option ssl-hello-chk"
                 echo "	mode tcp"
                 echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
