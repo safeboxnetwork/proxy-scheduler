@@ -71,6 +71,7 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
 
         DOMAIN_NAME=$(jq -r .DOMAIN $i)
         TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+        WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
             if [ "$WILDCARD" != "" ]; then
@@ -88,6 +89,7 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
 
         DOMAIN_NAME=$(jq -r .DOMAIN $i)
         TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+        WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]; then
             if [ "$WILDCARD" != "" ]; then
