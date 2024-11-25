@@ -75,9 +75,9 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
             if [ "$WILDCARD" != "" ]; then
                 HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
-                echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_http"
+                echo "use_backend $HOST."$TLD"_http if $HOST."$TLD"_http"
             else
-                echo "use_backend host_"$DOMAIN_NAME" if "$DOMAIN_NAME"_http"
+                echo "use_backend "$DOMAIN_NAME"_http if "$DOMAIN_NAME"_http"
             fi
         fi
     done
@@ -92,13 +92,13 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]; then
             if [ "$WILDCARD" != "" ]; then
                 HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
-                echo "backend host_"$HOST."$TLD"
-                echo "	mode http"
-                echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
+                echo "backend $HOST."$TLD"_http
+                echo " mode http"
+                echo " server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
             else
-                echo "backend host_"$DOMAIN_NAME
-                echo "	mode http"
-                echo "	server $DOMAIN_NAME $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
+                echo "backend "$DOMAIN_NAME"_http"
+                echo " mode http"
+                echo " server $DOMAIN_NAME $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
             fi
         fi
     done
@@ -106,7 +106,7 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
     echo
 
     echo "frontend https
-"
+                "
 
     cat "$global_https"
     echo
@@ -143,9 +143,9 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
             if [ "$WILDCARD" != "" ]; then
                 HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
-                echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_https"
+                echo "use_backend $HOST."$TLD"_https if $HOST."$TLD"_https"
             else
-                echo "use_backend host_"$DOMAIN_NAME" if "$DOMAIN_NAME"_https"
+                echo "use_backend "$DOMAIN_NAME"_https if "$DOMAIN_NAME"_https"
             fi
         fi
     done
@@ -160,12 +160,12 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
             WILDCARD=$(echo $DOMAIN_NAME | grep '*')
             if [ "$WILDCARD" != "" ]; then
                 HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
-                echo "backend host_"$HOST".$TLD"
+                echo "backend $HOST."$TLD"_https
                 echo "	option ssl-hello-chk"
                 echo "	mode tcp"
                 echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
             else
-                echo "backend host_"$DOMAIN_NAME
+                echo "backend "$DOMAIN_NAME"_https"
                 echo "	option ssl-hello-chk"
                 echo "	mode tcp"
                 echo "	server $DOMAIN_NAME $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
