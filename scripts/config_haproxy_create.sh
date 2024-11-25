@@ -44,20 +44,20 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
 
             TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
-            HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
             WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
             if [ "$WILDCARD" != "" ]; then
+                HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
                 echo "acl $HOST."$TLD"_http hdr(host) -m reg -i ^[^\.]+\."$HOST"\."$TLD"$"
             else
-                echo "acl $HOST."$TLD"_http hdr(host) -i $DOMAIN_NAME"
+                echo "acl "$DOMAIN_NAME"_http hdr(host) -i $DOMAIN_NAME"
             fi
         fi
 
         if [[ "$DOMAIN_NAME" != "letsencrypt" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .ALIASES_HTTP[] $i)" != "" ]]; then
             ALIASES_LIST=$(jq -r .ALIASES_HTTP[] $i)
             for ALIAS in $ALIASES_LIST; do
-                echo "acl $HOST."$TLD"_http hdr(host) -i $ALIAS"
+                echo "acl "$DOMAIN_NAME"_http hdr(host) -i $ALIAS"
             done
         fi
 
@@ -71,10 +71,14 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
 
         DOMAIN_NAME=$(jq -r .DOMAIN $i)
         TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
-        HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
-            echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_http"
+            if [ "$WILDCARD" != "" ]; then
+                HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
+                echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_http"
+            else
+                echo "use_backend host_"$DOMAIN_NAME" if "$DOMAIN_NAME"_http"
+            fi
         fi
     done
 
@@ -84,12 +88,18 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
 
         DOMAIN_NAME=$(jq -r .DOMAIN $i)
         TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
-        HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]; then
-            echo "backend host_"$HOST."$TLD"
-            echo "	mode http"
-            echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
+            if [ "$WILDCARD" != "" ]; then
+                HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
+                echo "backend host_"$HOST."$TLD"
+                echo "	mode http"
+                echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
+            else
+                echo "backend host_"$DOMAIN_NAME
+                echo "	mode http"
+                echo "	server $DOMAIN_NAME $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
+            fi
         fi
     done
 
@@ -104,15 +114,15 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
     for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
         DOMAIN_NAME=$(jq -r .DOMAIN $i)
         TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
-        HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
         WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
 
             if [ "$WILDCARD" != "" ]; then
+                HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
                 echo "acl $HOST."$TLD"_https req_ssl_sni -i ^[^\.]+\.$HOST\."$TLD"$"
             else
-                echo "acl $HOST."$TLD"_https req_ssl_sni -i $DOMAIN_NAME"
+                echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i $DOMAIN_NAME"
             fi
         fi
         if [[ "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .ALIASES_HTTPS[] $i)" != "" ]]; then
@@ -126,9 +136,17 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
     echo
 
     for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
+        DOMAIN_NAME=$(jq -r .DOMAIN $i)
+        TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+        WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
-            echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_https"
+            if [ "$WILDCARD" != "" ]; then
+                HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
+                echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_https"
+            else
+                echo "use_backend host_"$DOMAIN_NAME" if "$DOMAIN_NAME"_https"
+            fi
         fi
     done
 
@@ -137,10 +155,21 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
     for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
 
         if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
-            echo "backend host_"$HOST".$TLD"
-            echo "	option ssl-hello-chk"
-            echo "	mode tcp"
-            echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
+            DOMAIN_NAME=$(jq -r .DOMAIN $i)
+            TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+            WILDCARD=$(echo $DOMAIN_NAME | grep '*')
+            if [ "$WILDCARD" != "" ]; then
+                HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
+                echo "backend host_"$HOST".$TLD"
+                echo "	option ssl-hello-chk"
+                echo "	mode tcp"
+                echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
+            else
+                echo "backend host_"$DOMAIN_NAME
+                echo "	option ssl-hello-chk"
+                echo "	mode tcp"
+                echo "	server $DOMAIN_NAME $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
+            fi
         fi
     done
 
