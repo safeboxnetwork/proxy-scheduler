@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Initial parameters
-DATE=`date +%F-%H-%M-%S`
+DATE=$(date +%F-%H-%M-%S)
 
 DOMAIN=$1
 
@@ -19,125 +19,130 @@ cp -a /scripts/haproxy_template.cfg $PROXY_CONFIG_DIR/haproxy.cfg
 
 {
 
-echo "frontend http
-";
+    echo "frontend http
+"
 
-cat "$global_http"
-echo 
+    cat "$global_http"
+    echo
 
-#echo "acl letsencrypt path_beg /.well-known/acme-challenge/";
+    #echo "acl letsencrypt path_beg /.well-known/acme-challenge/";
 
-echo 
+    echo
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
-  
-        if [[ "$(jq -r .REDIRECT_HTTPS $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
-        then    
-            echo "redirect prefix https://$(jq -r .REDIRECT_HTTPS $i) code 301 if { hdr(host) -i $(jq -r .DOMAIN $i) }";
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
+
+        DOMAIN_NAME=$(jq -r .DOMAIN $i)
+        if [[ "$(jq -r .REDIRECT_HTTPS $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
+            echo "redirect prefix https://$(jq -r .REDIRECT_HTTPS $i) code 301 if { hdr(host) -i $DOMAIN_NAME }"
         fi
-done
-echo
+    done
+    echo
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
 
-	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
-	then
-		INDIVIDUAL_DOMAIN_FLAG=$(jq -r .INDIVIDUAL_DOMAIN $i 2>/dev/null );
-		DOMAIN_NAME=$(jq -r .DOMAIN $i);
-		if [[ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ]]; then
-			echo "acl "$DOMAIN_NAME"_http hdr(host) -i "$DOMAIN_NAME"";
-		else
-			echo "acl "$DOMAIN_NAME"_http hdr(host) -m reg -i ^[^\.]+\."$DOMAIN_NAME"$";
-		fi
-	fi
+        DOMAIN_NAME=$(jq -r .DOMAIN $i)
+        if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
 
-	if [[ "$(jq -r .DOMAIN $i)" != "letsencrypt"  && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .ALIASES_HTTP[] $i)" != "" ]]
-	then
-		ALIASES_LIST=$(jq -r .ALIASES_HTTP[] $i)
-		for ALIAS in $ALIASES_LIST
-		do
-		 	echo "acl $(jq -r .DOMAIN $i)_http hdr(host) -i $ALIAS";
-		done
-	fi
+            TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+            HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
+            WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
-done
+            if [ "$WILDCARD" != "" ]; then
+                echo "acl $HOST."$TLD"_http hdr(host) -m reg -i ^[^\.]+\."$HOST"\."$TLD"$"
+            else
+                echo "acl $HOST."$TLD"_http hdr(host) -i $DOMAIN_NAME"
+            fi
+        fi
 
-echo 
+        if [[ "$DOMAIN_NAME" != "letsencrypt" && "$(jq -r .HTTP_PORT $i)" != "" && "$(jq -r .ALIASES_HTTP[] $i)" != "" ]]; then
+            ALIASES_LIST=$(jq -r .ALIASES_HTTP[] $i)
+            for ALIAS in $ALIASES_LIST; do
+                echo "acl $HOST."$TLD"_http hdr(host) -i $ALIAS"
+            done
+        fi
 
-#echo "use_backend letsencrypt_http if letsencrypt"
+    done
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
-        
-	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORTS $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
-	then
-		echo "use_backend $(jq -r .DOMAIN $i)_http if $(jq -r .DOMAIN $i)_http"; 
-	fi
-done
+    echo
 
-echo
+    #echo "use_backend letsencrypt_http if letsencrypt"
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
 
-      	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]
-      	then
-      		echo "backend $(jq -r .DOMAIN $i)_http";
-		echo "	mode http";
-		echo "	server $(jq -r .DOMAIN $i) $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy";
-	fi
-done
+        DOMAIN_NAME=$(jq -r .DOMAIN $i)
+        TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+        HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
 
-echo
+        if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
+            echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_http"
+        fi
+    done
 
-echo "frontend https
-";
+    echo
 
-cat "$global_https"
-echo 
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
+        DOMAIN_NAME=$(jq -r .DOMAIN $i)
+        TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+        HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
 
-	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
-	then
-		INDIVIDUAL_DOMAIN_FLAG=$(jq -r .INDIVIDUAL_DOMAIN $i 2>/dev/null );
-		DOMAIN_NAME=$(jq -r .DOMAIN $i);
-		if [[ "$INDIVIDUAL_DOMAIN_FLAG" == "" || "$INDIVIDUAL_DOMAIN_FLAG" == "null" ]]; then
-			echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i "$DOMAIN_NAME"";
-		else
-			echo "acl "$DOMAIN_NAME"_https req_ssl_sni -i -m reg ^[^\.]+\."$DOMAIN_NAME"$";
-		fi
-	fi
-	if [[ "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .ALIASES_HTTPS[] $i)" != "" ]]
-	then
-		 ALIASES_LIST=$(jq -r .ALIASES_HTTPS[] $i)
-	         for ALIAS in $ALIASES_LIST
-	         do
-	                   echo "acl $(jq -r .DOMAIN $i)_https req_ssl_sni -i $ALIAS";
-	         done
-	 fi
-done
+        if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTP_PORT $i)" != "" ]]; then
+            echo "backend host_"$HOST."$TLD"
+            echo "	mode http"
+            echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTP_PORT $i) send-proxy"
+        fi
+    done
 
-echo 
+    echo
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
+    echo "frontend https
+"
 
-	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
-	then
-		echo "use_backend $(jq -r .DOMAIN $i)_https if $(jq -r .DOMAIN $i)_https"; 
-	fi
-done
+    cat "$global_https"
+    echo
 
-echo 
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
+        DOMAIN_NAME=$(jq -r .DOMAIN $i)
+        TLD="$(echo $DOMAIN_NAME | rev | cut -d '.' -f1 | rev)"
+        HOST=$(echo $DOMAIN_NAME | rev | cut -d '.' -f2- | rev | cut -d '.' -f2-)
+        WILDCARD=$(echo $DOMAIN_NAME | grep '*')
 
-for i in `ls $DOMAIN_DIR|cut -d / -f2` ;  do
+        if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
 
-      	if [[ "$(jq -r .DOMAIN $i)" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .DOMAIN $i)" != "letsencrypt" ]]
-      	then
-      		echo "backend $(jq -r .DOMAIN $i)_https";
-		echo "	option ssl-hello-chk";
-		echo "	mode tcp";
-		echo "	server $(jq -r .DOMAIN $i) $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy";
-	fi
-done
+            if [ "$WILDCARD" != "" ]; then
+                echo "acl $HOST."$TLD"_https req_ssl_sni -i ^[^\.]+\.$HOST\."$TLD"$"
+            else
+                echo "acl $HOST."$TLD"_https req_ssl_sni -i $DOMAIN_NAME"
+            fi
+        fi
+        if [[ "$(jq -r .HTTPS_PORT $i)" != "" && "$(jq -r .ALIASES_HTTPS[] $i)" != "" ]]; then
+            ALIASES_LIST=$(jq -r .ALIASES_HTTPS[] $i)
+            for ALIAS in $ALIASES_LIST; do
+                echo "acl $HOST."$TLD"_https req_ssl_sni -i $ALIAS"
+            done
+        fi
+    done
 
-} >> "$file";
-echo "$DOMAIN" >> $PROXY_CONFIG_DIR/new_config
+    echo
+
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
+
+        if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
+            echo "use_backend host_"$HOST".$TLD if $HOST."$TLD"_https"
+        fi
+    done
+
+    echo
+
+    for i in $(ls $DOMAIN_DIR | cut -d / -f2); do
+
+        if [[ "$DOMAIN_NAME" != "" && "$(jq -r .HTTPS_PORT $i)" != "" && "$DOMAIN_NAME" != "letsencrypt" ]]; then
+            echo "backend host_"$HOST".$TLD"
+            echo "	option ssl-hello-chk"
+            echo "	mode tcp"
+            echo "	server $HOST.$TLD $(jq -r .LOCAL_NAME $i):$(jq -r .HTTPS_PORT $i) check send-proxy"
+        fi
+    done
+
+} >>"$file"
+echo "$DOMAIN" >>$PROXY_CONFIG_DIR/new_config
