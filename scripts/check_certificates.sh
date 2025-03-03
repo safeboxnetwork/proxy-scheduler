@@ -33,13 +33,28 @@ else
     DOCKER_REGISTRY_URL="";
 fi
 
-service_exec="docker run --rm \
--w /services/ \
+if [ "$SETUP_VERSION" == "latest" ]; then
+	VOLUME_MOUNTS="
 --mount src=SYSTEM_DATA,dst=/etc/ssl/certs,volume-subpath=ssl/certs,ro \
 --mount src=SYSTEM_DATA,dst=/etc/dns/hosts.local,volume-subpath=dns/hosts.local,ro \
 --mount src=USER_CONFIG,dst=/services,volume-subpath=services/tmp \
 --mount src=USER_CONFIG,dst=/etc/user/config/system.json,volume-subpath=system.json,ro \
 --mount src=USER_CONFIG,dst=/etc/user/config/user.json,volume-subpath=user.json,ro \
+";
+else 
+	VOLUME_MOUNTS="
+ -v /etc/system/data/dns:/etc/dns:rw \
+ -v /etc/ssl/certs:/etc/ssl/certs:ro \
+ -v /etc/user/config/user.json:/etc/user/config/user.json:ro \
+ -v /etc/user/config/system.json:/etc/user/config/system.json:ro \
+ -v /etc/user/config/services/:/services/:ro \
+ -v /etc/user/config/services/tmp:/services/tmp:rw \
+"
+fi;
+
+service_exec="docker run --rm \
+-w /services/ \
+$VOLUME_MOUNTS
 -v /var/run/docker.sock:/var/run/docker.sock \
 --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
 $DOCKER_REGISTRY_URL$SETUP:$SETUP_VERSION"                                                              
