@@ -14,17 +14,9 @@
 	TIMEOUT=$TIMEOUT
 	RESTART=$RESTART
 
-# Setup docker registry url path
-
-if [[ -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
-	SETUP="/setup";
-else
-	SETUP="setup";
-	DOCKER_REGISTRY_URL="";
-fi
+SETUP_VERSION=${SETUP_VERSION:-latest};
 
 # Setting service files path
-
 if [ "$SERVICE_FILES" == "" ]; then
 	SERVICE_FILES=/etc/user/config/services
 fi
@@ -33,6 +25,7 @@ if [ "$SOURCE" == "" ]; then
 	SOURCE=/etc/user/config
 fi
 
+# Setup docker registry url path
 if [[ -n "$DOCKER_REGISTRY_URL" && "$DOCKER_REGISTRY_URL" != "null" ]] ; then
     SETUP="/setup";
 else
@@ -49,7 +42,7 @@ service_exec="docker run --rm \
 --mount src=USER_CONFIG,dst=/etc/user/config/user.json,volume-subpath=user.json,ro \
 -v /var/run/docker.sock:/var/run/docker.sock \
 --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
-$DOCKER_REGISTRY_URL$SETUP"                                                              
+$DOCKER_REGISTRY_URL$SETUP:$SETUP_VERSION"                                                              
                                                                                          
 letsencrypt_certificates() {                                                             
                                                                                          
