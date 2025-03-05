@@ -20,6 +20,7 @@ ROLE=$ROLE
 SERVICE_NAME=$SERVICE_NAME
 PROXY_CONFIG_DIR=$PROXY_CONFIG_DIR
 
+SETUP_VERSION=${SETUP_VERSION:-latest};
 
 # Setup docker registry url path
 
@@ -77,7 +78,7 @@ service_exec="docker run --rm \
  -v /etc/user/config/services/tmp/:/services/tmp/:rw \
  -v /var/run/docker.sock:/var/run/docker.sock \
  --env DOCKER_REGISTRY_URL=$DOCKER_REGISTRY_URL \
- $DOCKER_REGISTRY_URL$SETUP"
+ $DOCKER_REGISTRY_URL$SETUP:$SETUP_VERSION"
 
 do_proxy_restart() { 
 
