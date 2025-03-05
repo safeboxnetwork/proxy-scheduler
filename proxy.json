@@ -1,49 +1,49 @@
 {
-	"firewall_loadbalancer_wireguard_prerouting": {
-		"NAME": "wireguard_proxy_client",
-		"PREROUTING": "true",
-		"TARGET_IP": "172.18.100.2",
-		"TYPE": "tcp",
-		"SOURCE_PORT_1": "80",
-		"SOURCE_PORT_2": "443",
-		"TARGET_PORT_1": "80",
-		"TARGET_PORT_2": "443",
-		"COMMENT": "edeg3e98"
-		},
-	"firewall_loadbalancer_wireguard_postrouting": {
-		"NAME": "wireguard_proxy_client",
-		"POSTROUTING": "true",
-		"TARGET_IP": "172.18.100.0",
-		"TARGET_PORT_1": "80",
-		"TARGET_PORT_2": "443",
-		"TYPE": "tcp",
-		"COMMENT": "edeg3e98"
-		},
-	"proxy_scheduler": {
-		"DOCKER_REGISTRY_URL": "registry.format.hu",
-		"CERT_DIR": "/keys",
-		"DOMAIN_DIR": "/domains",
-		"PROXY_SERVICE_FILE": "public-proxy.json",
-		"PROXY_CONFIG_DIR": "/proxy_config",
-		"PROXY_TYPE": "haproxy",
-		"TIMEOUT": "5",
-		"RESTART": "3",
-		"ROLE": "backend-proxy",
-		"SERVICE_NAME": "public-proxy"
-	 	},
-	"proxy_scheduler_local": {
-		"DOCKER_REGISTRY_URL": "registry.format.hu",
-		"PROXY_TYPE": "",
-		"GENERATE_CERTIFICATE": "true",
-		"LETSENCRYPT_URL": "letsencrypt.org",
-		"LETSENCRYPT_SERVICE_NAME": "letsencrypt.json",
-		"CERT_DIR": "/keys",
-		"DOMAIN_DIR": "/domains",
-		"PROXY_SERVICE_FILE": "public-proxy.json",
-		"PROXY_CONFIG_DIR": "/proxy_config",
-		"TIMEOUT": "5",
-		"RESTART": "3",
-		"ROLE": "backend-proxy",
-		"SERVICE_NAME": "public-proxy"
-		}
+    "firewall_loadbalancer_wireguard_prerouting": {
+        "NAME": "wireguard_proxy_client",
+        "PREROUTING": "true",
+        "TARGET_IP": "172.18.100.2",
+        "TYPE": "tcp",
+        "SOURCE_PORT_1": "80",
+        "SOURCE_PORT_2": "443",
+        "TARGET_PORT_1": "80",
+        "TARGET_PORT_2": "443",
+        "COMMENT": "edeg3e98"
+    },
+    "firewall_loadbalancer_wireguard_postrouting": {
+        "NAME": "wireguard_proxy_client",
+        "POSTROUTING": "true",
+        "TARGET_IP": "172.18.100.0",
+        "TARGET_PORT_1": "80",
+        "TARGET_PORT_2": "443",
+        "TYPE": "tcp",
+        "COMMENT": "edeg3e98"
+    },
+    "proxy_scheduler": {
+        "DOCKER_REGISTRY_URL": "safebox",
+        "CERT_DIR": "/keys",
+        "DOMAIN_DIR": "/domains",
+        "PROXY_SERVICE_FILE": "public-proxy.json",
+        "PROXY_CONFIG_DIR": "/proxy_config",
+        "PROXY_TYPE": "haproxy",
+        "TIMEOUT": "5",
+        "RESTART": "3",
+        "ROLE": "backend-proxy",
+        "SERVICE_NAME": "public-proxy"
+    },
+    "proxy_scheduler_local": {
+        "DOCKER_REGISTRY_URL": "safebox",
+        "PROXY_TYPE": "",
+        "GENERATE_CERTIFICATE": "true",
+        "LETSENCRYPT_URL": "letsencrypt.org",
+        "LETSENCRYPT_SERVICE_NAME": "letsencrypt.json",
+        "CERT_DIR": "/keys",
+        "DOMAIN_DIR": "/domains",
+        "PROXY_SERVICE_FILE": "public-proxy.json",
+        "PROXY_CONFIG_DIR": "/proxy_config",
+        "TIMEOUT": "5",
+        "RESTART": "3",
+        "ROLE": "backend-proxy",
+        "SERVICE_NAME": "public-proxy"
+    }
 }

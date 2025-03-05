@@ -1,67 +1,77 @@
 {
-        "main": {
-                "SERVICE_NAME": "proxy-scheduler",
-                "DOMAIN": "null"
-        },
-        "containers": [
+    "main": {
+        "SERVICE_NAME": "proxy-scheduler",
+        "DOMAIN": "null"
+    },
+    "containers": [
+        {
+            "IMAGE": "safebox/proxy-scheduler:latest",
+            "NAME": "proxy_scheduler-ifhiwhhg",
+            "MEMORY": "64M",
+            "IP": "null",
+            "NETWORK": "host",
+            "VOLUMES": [
                 {
-                        "IMAGE": "registry.format.hu/proxy-scheduler:latest",
-                        "NAME": "proxy_scheduler-ifhiwhhg",
-                        "MEMORY": "64M",
-                        "IP": "null",
-                        "NETWORK": "host",
-                        "VOLUMES": [
-                                {
-                                "SOURCE": "/etc/user/config/services",
-                                "DEST": "/etc/user/config/services",
-                                "TYPE": "rw"
-                                },
-                                {
-                                "SOURCE": "/etc/user/config/domains",
-                                "DEST": "/domains",
-                                "TYPE": "ro"
-                                },
-                                {
-                                "SOURCE": "/etc/system/data/ssl/keys",
-                                "DEST": "/keys",
-                                "TYPE": "rw"
-                                },
-                                {
-                                "SOURCE": "/etc/system/data/ssl/certs/",
-                                "DEST": "/etc/ssl/certs/",
-                                "TYPE": "ro"
-                                },
-                                {
-                                "SOURCE": "/etc/system/config/public-proxy/nginx",
-                                "DEST": "/proxy_config",
-                                "TYPE": "rw"
-                                },
-                                {
-                                "SOURCE": "/etc/user/config/services/public-proxy.json",
-                                "DEST": "/public-proxy.json",
-                                "TYPE": "ro"
-                                },
-                                {
-                                "SOURCE": "/var/run/docker.sock",
-                                "DEST": "/var/run/docker.sock",
-                                "TYPE": "rw"
-                                }
-                                ],
-                        "PORTS": [ ],
-                        "READYNESS": [
-                                {"tcp": ""},
-                                {"HTTP": ""},
-                                {"EXEC": "/ready.sh"}
-                                ],
-                        "ENVS": [
-				 ],
-			"ENV_FILES": [ "/etc/system/config/proxy.json" ],
-                        "EXTRA": "null",
-                        "DEPEND": [ "public-proxy.networks.loadbalancer", "public-proxy.containers.loadbalancer-27dhuwdh" ],
-                        "START_ON_BOOT": "true",
-                        "CMD": "null",
-                        "PRE_START": "null",
-                        "POST_START": "null"
+                    "SOURCE": "/etc/user/config/services",
+                    "DEST": "/etc/user/config/services",
+                    "TYPE": "rw"
+                },
+                {
+                    "SOURCE": "/etc/user/config/domains",
+                    "DEST": "/domains",
+                    "TYPE": "ro"
+                },
+                {
+                    "SOURCE": "/etc/system/data/ssl/keys",
+                    "DEST": "/keys",
+                    "TYPE": "rw"
+                },
+                {
+                    "SOURCE": "/etc/system/data/ssl/certs/",
+                    "DEST": "/etc/ssl/certs/",
+                    "TYPE": "ro"
+                },
+                {
+                    "SOURCE": "/etc/system/config/public-proxy/nginx",
+                    "DEST": "/proxy_config",
+                    "TYPE": "rw"
+                },
+                {
+                    "SOURCE": "/etc/user/config/services/public-proxy.json",
+                    "DEST": "/public-proxy.json",
+                    "TYPE": "ro"
+                },
+                {
+                    "SOURCE": "/var/run/docker.sock",
+                    "DEST": "/var/run/docker.sock",
+                    "TYPE": "rw"
                 }
-        ]
+            ],
+            "PORTS": [],
+            "READYNESS": [
+                {
+                    "tcp": ""
+                },
+                {
+                    "HTTP": ""
+                },
+                {
+                    "EXEC": "/ready.sh"
+                }
+            ],
+            "ENVS": [],
+            "ENV_FILES": [
+                "/etc/system/config/proxy.json"
+            ],
+            "EXTRA": "null",
+            "DEPEND": [
+                "public-proxy.networks.loadbalancer",
+                "public-proxy.containers.loadbalancer-27dhuwdh"
+            ],
+            "START_ON_BOOT": "true",
+            "CMD": "null",
+            "PRE_START": "null",
+            "POST_START": "null"
+        }
+    ]
 }
