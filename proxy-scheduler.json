@@ -6,11 +6,16 @@
     "containers": [
         {
             "IMAGE": "safebox/proxy-scheduler:latest",
-            "NAME": "proxy_scheduler-ifhiwhhg",
+            "NAME": "proxy_scheduler",
             "MEMORY": "64M",
             "IP": "null",
             "NETWORK": "host",
             "VOLUMES": [
+                {
+                    "SOURCE": "SHARED",
+                    "DEST": "/var/tmp/shared",
+                    "TYPE": "rw"
+                },
                 {
                     "SOURCE": "/etc/user/config/services",
                     "DEST": "/etc/user/config/services",
