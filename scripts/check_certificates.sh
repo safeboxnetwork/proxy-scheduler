@@ -24,8 +24,7 @@ create_json() {
     LOG=$(cat $LOG_FILE | base64 -w0)
     TMP_FILE=$(mktemp)
     install -m 664 -g 65534 /dev/null $TMP_FILE
-    jq 'if . == null or . == [] then [{"domain": "'$DOMAIN'", "date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}] else . + [{"domain": "'$DOMAIN'", 
-"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}] end' $LETSENCRYPT_OUTPUT >$TMP_FILE
+    jq 'if . == null or . == [] then [{"'$DOMAIN'": { "date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}] else . + [{"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}] end' $LETSENCRYPT_OUTPUT >$TMP_FILE
     cat $TMP_FILE >$LETSENCRYPT_OUTPUT
     rm $TMP_FILE
 }
@@ -196,9 +195,9 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
                         echo "Not reached number of restart limit: "$RESTART" sleep "$TIMEOUT" and try again to start lets encrypt process."
                     fi
                 else
-                    LOG="The domain '$DOMAIN' could not reachable. Reached retrying limit: '$RESTART', giving up to start lets encrypt process, try self sign the certificate"
+                    LOG=$(echo "The domain '$DOMAIN' could not reachable. Reached retrying limit: '$RESTART', giving up to start lets encrypt process, try self sign the certificate"| base64 -w0)
                     STATUS="failed"
-                    create_json $DOMAIN $STATUS $LOG
+                    create_json $DOMAIN $STATUS "$LOG"
                 fi
 
             done
