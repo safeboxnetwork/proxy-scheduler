@@ -27,7 +27,6 @@ create_json() {
         echo '[]' >$LETSENCRYPT_OUTPUT
     fi
 
-    LOG=$(cat $LOG_FILE | base64 -w0)
     TMP_FILE=$(mktemp)
     jq '
       if . == null or . == [] then 
