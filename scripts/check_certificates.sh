@@ -24,15 +24,15 @@ create_json() {
 
     if [ ! -f $LETSENCRYPT_OUTPUT ]; then
         install -m 664 -g 65534 /dev/null $LETSENCRYPT_OUTPUT
-        echo '[]' >$LETSENCRYPT_OUTPUT
+        echo '{}' >$LETSENCRYPT_OUTPUT
     fi
 
     TMP_FILE=$(mktemp)
     jq '
       if . == null or . == [] then 
-        [{"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}] 
+        {"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}
       else 
-        (map(select(has("'$DOMAIN'") | not))) + [{"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}]
+        (map(select(has("'$DOMAIN'") | not))) + {"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}
       end
     ' $LETSENCRYPT_OUTPUT >$TMP_FILE
     cat $TMP_FILE >$LETSENCRYPT_OUTPUT
