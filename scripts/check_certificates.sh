@@ -32,7 +32,7 @@ create_json() {
       if . == null or . == [] then 
         {"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}
       else 
-        (map(select(has("'$DOMAIN'") | not))) + {"'$DOMAIN'":{"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'"}}
+       (map(select(has("'$DOMAIN'") | not)) | from_entries) + {"'$DOMAIN'": {"date": "'$DATE'", "status": "'$STATUS'", "log": "'$LOG'" }} 
       end
     ' $LETSENCRYPT_OUTPUT >$TMP_FILE
     cat $TMP_FILE >$LETSENCRYPT_OUTPUT
