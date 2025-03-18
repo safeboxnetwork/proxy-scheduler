@@ -183,7 +183,7 @@ if [ "$GENERATE_CERTIFICATE" == "true" ]; then
 
         if [ ! -f $LETSENCRYPT_OUTPUT ]; then
             install -m 664 -g 65534 /dev/null $LETSENCRYPT_OUTPUT
-            echo '[]' >$LETSENCRYPT_OUTPUT
+            echo '{}' >$LETSENCRYPT_OUTPUT
         fi
         DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN"
         if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]]; then
