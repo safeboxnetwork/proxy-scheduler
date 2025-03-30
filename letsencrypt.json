@@ -21,8 +21,13 @@
             "NETWORK": "letsencrypt",
             "VOLUMES": [
                 {
-                    "SOURCE": "/etc/system/ssl/keys/",
+                    "SOURCE": "/etc/system/data/ssl/keys/",
                     "DEST": "/acme.sh/",
+                    "TYPE": "rw"
+                },
+                {
+                    "SOURCE": "SHARED",
+                    "DEST": "/var/tmp/shared",
                     "TYPE": "rw"
                 },
                 {
