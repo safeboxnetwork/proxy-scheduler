@@ -170,7 +170,7 @@ if [ ! -f "$DOMAIN_CERT_DIR/dhparam.pem" ]; then
 
 fi
 
-if [ "$GENERATE_CERTIFICATE" == "true" ]; then
+if [ "$GENERATE_CERTIFICATE" == "true" ] && [ "$DOMAIN" != "localhost" ]; then
 
     CURL_CHECK="curl -s -o /dev/null -w "%{http_code}" https://$LETSENCRYPT_URL"
 
