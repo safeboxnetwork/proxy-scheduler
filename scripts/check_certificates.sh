@@ -187,7 +187,7 @@ if [ "$GENERATE_CERTIFICATE" == "true" ] && [ "$DOMAIN" != "localhost" ]; then
         fi
         DOMAIN_CHECK="curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN"
         if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]]; then
-            echo "DOMAIN CHECK: $DOMAIN_CHECK"
+            echo "DOMAIN CHECK: $(eval $DOMAIN_CHECK)"
             letsencrypt_certificates
             echo "Started letsencrypt for domain: $DOMAIN first time"
         else
@@ -197,7 +197,7 @@ if [ "$GENERATE_CERTIFICATE" == "true" ] && [ "$DOMAIN" != "localhost" ]; then
                     sleep $TIMEOUT
                     echo "Starting letsencrypt process again"
                     if [[ "$(eval $DOMAIN_CHECK)" == "200" || "$(eval $DOMAIN_CHECK)" == "301" ]]; then
-                        echo "DOMAIN CHECK: $DOMAIN_CHECK"
+                        echo "DOMAIN CHECK: $(eval $DOMAIN_CHECK)"
                         letsencrypt_certificates
                         echo "Started letsencrypt for domain: $DOMAIN second time"
                         break

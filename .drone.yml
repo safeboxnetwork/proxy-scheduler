@@ -17,6 +17,8 @@ steps:
   - name: build multiarch proxy-scheduler
     image: docker.io/owncloudci/drone-docker-buildx:4
     privileged: true
+    environment:
+      BUILDKIT_NO_HTTP2: "1" 
     settings:
       cache-from: [ "registry.dev.format.hu/proxy-scheduler" ]
       registry: registry.dev.format.hu
