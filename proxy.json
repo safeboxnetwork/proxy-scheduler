@@ -27,7 +27,7 @@
         "PROXY_CONFIG_DIR": "/proxy_config",
         "PROXY_TYPE": "haproxy",
         "TIMEOUT": "5",
-        "RESTART": "3",
+        "RESTART": "10",
         "ROLE": "backend-proxy",
         "SERVICE_NAME": "public-proxy"
     },
