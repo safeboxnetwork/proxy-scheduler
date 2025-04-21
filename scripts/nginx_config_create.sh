@@ -84,8 +84,8 @@ add_location() {
             echo "location $ALP_LOCAL_PATH {"
 
             if [ "$BASIC_AUTH" == "TRUE" ]; then
-                echo '  auth_basic           "Administrator’s Area";
-     auth_basic_user_file conf/htpasswd;
+                echo '  auth_basic           "SAFEBOX AUTHORIZATION";
+     auth_basic_user_file htpasswd;
                         '
             fi
 
@@ -215,8 +215,8 @@ return 301 https://$DOMAIN_NAME;
                 echo "location / {"
 
                 if [ "$BASIC_AUTH" == "TRUE" ]; then
-                    echo '  auth_basic           "Administrator’s Area";
-     auth_basic_user_file conf/htpasswd;
+                    echo '  auth_basic           "SAFEBOX AUTHORIZATION";
+     auth_basic_user_file htpasswd;
                         '
                 fi
 
@@ -319,6 +319,12 @@ location = /$ERROR_PAGE {
                 echo "return 301 $REDIRECT_HTTPS;"
             else
                 echo "location / {"
+
+                if [ "$BASIC_AUTH" == "TRUE" ]; then
+                    echo '  auth_basic           "SAFEBOX AUTHORIZATION";
+     auth_basic_user_file htpasswd;
+                        '
+                fi
 
                 if [[ "$ALLOWED_NETWORK" != "" ]]; then
                     ALLOWED_NETWORK_IDX=$(jq -r '.ALLOWED_NETWORK | length' $DOMAIN_SOURCE)
