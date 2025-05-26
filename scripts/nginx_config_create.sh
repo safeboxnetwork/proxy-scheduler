@@ -28,7 +28,7 @@ if [[ "$LOCAL_NAME" == "" || "$LOCAL_NAME" == "null" ]]; then
 fi
 RELOAD_LOCATIONS=""
 
-if [ -n "$2" ]; then
+if [ -n "$2" ] || [ "$OPERATION" == "DELETE" ]; then
     echo "$DOMAIN_NAME DELETED"
     rm $DOMAIN_NAME.conf
     exit
