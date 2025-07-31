@@ -436,5 +436,5 @@ fi
 echo "$DOMAIN" >>new_config
 
 if [ "$HTTPS_PORT" != "" ]; then
-    /scripts/check_certificates.sh "$DOMAIN_NAME"
+    /scripts/check_certificates.sh "$DOMAIN_NAME" &
 fi
